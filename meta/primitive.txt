@@ -1,0 +1,23 @@
+primitive types :
+    name | size (in bytes) | description
+    void   | 0 | empty
+    byte   | 1 | (+-255)
+    short  | 2 | (+-65,535)
+    int    | 4 | (+-4,294,967,296)
+    long   | 8 | (+-1.84467441e19)
+    float  | 4 |
+    double | 8 |
+
+primitive modifiers :
+    const
+    signed
+    unsigned
+
+aliases (in xalias) :
+    (name) | (original)
+    char   | byte
+    bool   | byte
+    ubyte  | unsigned byte
+    ushort | unsigned short
+    uint   | unsigned int
+    ulong  | unsigned long

@@ -1,0 +1,7 @@
+import {xalias}
+
+
+void print(const char @ str)
+{
+    ;
+}

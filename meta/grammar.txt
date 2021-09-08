@@ -1,0 +1,82 @@
+key                              :
+    decl-mods                    : declaration modifiers
+    el-delim                     : end of line deliminator
+    expr                         : expression
+    name                         : non-new name
+    identifier                   : new name
+
+import                           :
+    std-lib                      : import {filename}
+    user-files                   : import [filename]
+
+app-entry-point                  :
+    integral entry(void) { statement... }
+    integral entry(unsigned integral arg_count, char** arg_strings) { statement... }
+
+declaration                      :
+    variable                     : opt-decl-mod... type identifier
+    pointer                      : opt-decl-mod... type @ identifier
+    function                     : type identifier ( opt-var-decl,... )
+    op-overload                  : type operator symbol ( opt-var-decl... )
+    structure                    : struct identifier
+    modifier                     :
+        struct identifier        : mod identifier
+        struct identifier        : mod [ identifier,... ]
+    alias                        : alias identifier = opt-decl-mod name
+
+definition                       :
+    variable                     : decl = value
+    function                     : function-declaration { statement... }
+    structure                    : struct-decl { var-decl... }
+
+expressions                      :
+    binary                       :
+        add                      : expr + expr
+        subtract                 : expr - expr
+        multiply                 : expr * expr
+        divide                   : expr / expr
+        mod                      : expr % expr
+        less-than                : expr < expr
+        less-than or equal to    : expr <= expr
+        greater-than             : expr <= expr
+        greater-than or equal to : expr <= expr
+        or                       : expr | expr
+        and                      : expr & expr
+        xor                      : expr ^ expr
+        join                     : expr , expr
+
+    unary                        :
+        not                      : ! expr
+        dereference              : @ ptr-expr
+        addresser                : # expr
+        increment                :
+            pre-return           : ++ expr
+            post-return          : expr ++
+        decrement                :
+            pre-return           : -- expr
+            post-return          : expr --
+
+    ternary                      :
+        logical                  : ( bool-expr ) ? expr : expr
+
+    encapsulating                :
+        list                     : [ expr... ]
+        string                   : "..."
+        template                 : template < expr... >
+
+other                            :
+    conditional                  :
+        if                       : if ( bool-expr ) { statement... }
+                                   if ( bool-expr ) statement
+        if-else                  : if ( bool-expr ) { statement... } else { statement... }
+
+    loops                        :
+        for                      :
+            for ( { statement } { bool-expr } { statement } ) statement
+            for ( { statement } { bool-expr } { statement } ) { statement... }
+            for ( declaration : iterable ) statement
+            for ( declaration : iterable ) { statement... }
+
+        while                    :
+            while ( bool-expr ) { statement... }
+            while ( bool-expr ) { statement... } else { statement... }
