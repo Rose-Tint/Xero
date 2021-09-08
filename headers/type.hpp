@@ -9,15 +9,12 @@ struct Type
 };
 
 
-typedef const Type primitive_t;
-
-
-primitive_t Void{ 0 };
-primitive_t Float{ 2 };
-primitive_t Double{ 4 };
-primitive_t Byte{ 1 };
-primitive_t Short{ 2 };
-primitive_t Int{ 4 };
-primitive_t Long{ 8 };
-primitive_t Class{ 0 };
-primitive_t Func{ 0 };
+const Type Void{ 0 };
+const Type Float{ 2 };
+const Type Double{ 4 };
+const Type Byte{ 1 };
+const Type Short{ 2 };
+const Type Int{ 4 };
+const Type Long{ 8 };
+const Type Class{ 0 };
+const Type Func{ 0 };

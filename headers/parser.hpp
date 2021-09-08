@@ -11,12 +11,10 @@
 
 class Parser
 {
-    std::ifstream file;
     std::stringstream code;
-    std::unordered_set<std::string> imported;
-    std::vector<oper_t> custom_ops;
-    std::stack<expr_t> operand_stk;
-    std::stack<expr_t> operator_stk;
+    std::vector<Expression*> custom_ops;
+    std::stack<Expression*> operand_stk;
+    std::stack<Expression*> operator_stk;
 
     void add_custom_oper();
     void process(std::string);
@@ -29,8 +27,8 @@ class Parser
     bool is_identifier(char);
     bool is_valid_number_char(char);
     bool is_operator(char);
-    std::vector<token_t> lex(std::string);
     
     public:
-    void operator()(std::string);
+    Parser() = default;
+    expr_t* operator()(std::vector<token_t>);
 };

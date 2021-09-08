@@ -1,63 +1,98 @@
 #pragma once
 
-#include <string>
-#include <unordered_set>
+#include <vector>
 
 
-struct oper_t;
-struct expr_t;
-struct token_t;
+struct Statement;
+struct Expression;
+struct Operator;
 
 
-struct token_t
+struct Statement
 {
-    const char opcode;
-    std::string value;
+    ;
 };
 
 
-struct oper_t
+struct StatementBlock : Statement
 {
-    std::string value;
-    unsigned char precedence;
+    std::vector<Statement> statements;
 };
 
 
-struct expr_t
+struct IfElse : Statement
 {
-    std::string value;
-    oper_t op;
-    Expr* left_op;
-    Expr* right_op;
-    ~Expr();
+    Expression* condition;
+    Statement* if_statement;
+    Statement* else_statement;
 };
 
 
-const std::unordered_set<char> pri_ops
+struct WhileLoop : Statement
 {
-    '!',
-    '@',
-    '#',
-    '%',
-    '^',
-    '&',
-    '*',
-    '(',
-    ')',
-    '-',
-    '+',
-    '=',
-    '{',
-    '}',
-    '[',
-    ']',
-    '|',
-    ':',
-    ';',
-    '<',
-    '>',
-    ',',
-    '.',
-    '/',
-    '?'
+    Expression* condition;
+    Statement statement;
 };
+
+
+struct ForLoop : WhileLoop
+{
+    Statement* before;
+    Statement* each;
+};
+
+
+struct VarDecl : Statement
+{
+    // TODO
+};
+
+
+struct Assignment : Statement
+{
+    Operator* op;
+    // TODO
+};
+
+
+struct VoidFuncCall : Statement
+{
+    // TODO
+};
+
+
+
+
+struct Expression
+{
+    ;
+};
+
+
+struct BinaryOp : Expression
+{
+    Operator* op;
+    Expression* left;
+    Expression* right;
+};
+
+
+struct UnaryOp : Expression
+{
+    Operator* op;
+    Expression* operand;
+};
+
+
+struct FuncCall : Expression
+{
+    // TODO
+};
+
+
+struct Conditional : Expression
+{
+    // TODO
+};
+
+
