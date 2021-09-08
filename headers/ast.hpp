@@ -1,14 +1,35 @@
 #pragma once
 
-#include "expression.hpp"
+#include <string>
+#include <vector>
 
 
-struct AbstractSyntaxTree
+struct Type
 {
-    expr_t expr;
-    AbstractSyntaxTree* left = null_ptr;
-    AbstractSyntaxTree* right = null_ptr;
+    const std::size_t size = 0;
 };
 
 
-typedef AbstractSyntaxTree ast_t, *ast_ptr_t;
+typedef const Type primitive_t;
+
+
+primitive_t Void{ 0 };
+primitive_t Float{ 2 };
+primitive_t Double{ 4 };
+primitive_t Byte{ 1 };
+primitive_t Short{ 2 };
+primitive_t Int{ 4 };
+primitive_t Long{ 8 };
+primitive_t Class{ 0 };
+primitive_t Func{ 0 };
+
+
+struct Expr
+{
+    std::string value;
+    enum { id, integ, flo, oper } type;
+    Expr* op;
+    Expr* left_op;
+    Expr* right_op;
+    ~Expr() { delete op; delete left_op; delete right_op; }
+};
