@@ -1,60 +1,49 @@
 #include "parser.hpp"
+#include <cctype>
 
 
-Parser::Parser(std::string fname, std::vector<std::string> used_imps)
+void Parser::process(std::string fname)
 {
-    filename = fname;
-    imported = used_imps;
-    file = { };
-    code = { };
-}
-
-
-std::stringstream& Parser::get_code()
-{
-    return code;
-}
-
-
-void Parser::process()
-{
-    file.open(filename);
-    while (file)
+    bool should_process = false;
+    file.open(fname);
+    char c = file.peek();
+    std::string str {};
+    while (file.get(c))
     {
-        char c = file.get();
-        if (c == '~')
+        if (should_process)
         {
-            bool is_repeat = false;
-            std::string import_fname;
-            for (char next_c = file.get(); next_c != '\n'; next_c = file.get())
+            if (c == '~')
             {
-                import_fname += next_c;
+                should_process = false;
+                str.clear();
+                continue;
             }
-            import(import_fname);
+            else if (c == ' ')
+            {
+                if (str == "import")
+                {
+                    str.clear();
+                    while (c == ' ') file.get(c);
+                    while (std::isalpha(c))
+                    {
+                        file.get(c);
+                        str += c;
+                    }
+                    if (!imported.find(import_fname))
+                    {
+                        imported.push_back(import_fname);
+                        process(import_fname);
+                    }
+                }
+                // ADD OTHER PREPROCESSING DIRECTIVES HERE
+            }
+            else if (std::isalpha(c)) str += c;
+            else throw -2;
         }
+        else if (c == '~') should_process = true;
         else code.put(c);
     }
     file.close();
-}
-
-
-void Parser::import(std::string import_fname)
-{
-    bool is_repeat = false;
-    for (auto other_imp_fname : imported)
-    {
-        is_repeat |= (import_fname == other_imp_fname);
-    }
-    if (!is_repeat)
-    {
-        imported.push_back(import_fname);
-        Parser second_parser(import_fname, imported);
-        second_parser.process();
-        while (second_parser.code)
-        {
-            code.put(second_parser.get_code().get());
-        }
-    }
 }
 
 
@@ -73,28 +62,21 @@ bool Parser::is_valid_number_char(char c)
 bool Parser::is_operator(char c)
 {
     bool is_op = false;
-    for (Expr expr : custom_ops)
+    for (oper_t op : custom_ops)
     {
-        if (expr.value[0] == c)
+        if (expr_t.value[0] == c)
         {
             return true;
         }
     }
-    for (std::string str : pri_ops)
-    {
-        if (str[0] == c)
-        {
-            return true;
-        }
-    }
-    return false;
+    return (pri_ops.find(c));
 }
 
 
-Expr Parser::make_number()
+expr_t Parser::make_number()
 {
     char curr = code.peek();
-    std::string num = "";
+    std::string num {};
     bool is_float = false;
     while ((is_valid_number_char(curr) || curr == '_') && code.get(curr))
     {
@@ -113,24 +95,24 @@ Expr Parser::make_number()
         }
     }
 
-    return { num, ((is_float) ? Expr::flo : Expr::integ) };
+    return { num, ((is_float) ? expr_t::flo : expr_t::integ) };
 }
 
 
-Expr Parser::make_identifier()
+expr_t Parser::make_identifier()
 {
     char curr = code.peek();
-    std::string id = "";
+    std::string id {};
     while ((is_identifier(curr) || std::isdigit(curr)) && code.get(curr))
     {
         id += curr;
     }
 
-    return { id, Expr::id };
+    return { id, expr_t::id };
 }
 
 
-Expr Parser::make_operator()
+oper_t Parser::make_operator()
 {
     char curr = code.peek();
     std::string op = {};
@@ -139,14 +121,14 @@ Expr Parser::make_operator()
         op += curr;
     }
 
-    return { op, Expr::oper };
+    return { op };
 }
 
 
-Expr* Parser::parse()
+expr_t* Parser::parse()
 {
     code.seekg(0);
-    char curr;
+    char curr = code.peek();
     while (code.get(curr))
     {
         if (std::isdigit(curr) || (curr == '-' && std::isdigit(code.peek())))

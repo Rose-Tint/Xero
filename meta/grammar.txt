@@ -23,6 +23,7 @@ declaration                      :
         struct identifier        : mod identifier
         struct identifier        : mod [ identifier,... ]
     alias                        : alias identifier = opt-decl-mod name
+    custom operator              : operator desired-char ( precedence, 1-2-or-3 )
 
 definition                       :
     variable                     : decl = value

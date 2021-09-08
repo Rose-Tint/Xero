@@ -1,35 +1,63 @@
 #pragma once
 
 #include <string>
-#include <vector>
+#include <unordered_set>
 
 
-struct Type
+struct oper_t;
+struct expr_t;
+struct token_t;
+
+
+struct token_t
 {
-    const std::size_t size = 0;
+    const char opcode;
+    std::string value;
 };
 
 
-typedef const Type primitive_t;
-
-
-primitive_t Void{ 0 };
-primitive_t Float{ 2 };
-primitive_t Double{ 4 };
-primitive_t Byte{ 1 };
-primitive_t Short{ 2 };
-primitive_t Int{ 4 };
-primitive_t Long{ 8 };
-primitive_t Class{ 0 };
-primitive_t Func{ 0 };
-
-
-struct Expr
+struct oper_t
 {
     std::string value;
-    enum { id, integ, flo, oper } type;
-    Expr* op;
+    unsigned char precedence;
+};
+
+
+struct expr_t
+{
+    std::string value;
+    oper_t op;
     Expr* left_op;
     Expr* right_op;
-    ~Expr() { delete op; delete left_op; delete right_op; }
+    ~Expr();
+};
+
+
+const std::unordered_set<char> pri_ops
+{
+    '!',
+    '@',
+    '#',
+    '%',
+    '^',
+    '&',
+    '*',
+    '(',
+    ')',
+    '-',
+    '+',
+    '=',
+    '{',
+    '}',
+    '[',
+    ']',
+    '|',
+    ':',
+    ';',
+    '<',
+    '>',
+    ',',
+    '.',
+    '/',
+    '?'
 };
