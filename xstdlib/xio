@@ -1,7 +1,14 @@
-import {xalias}
-
-
-void print(const char @ str)
+struct file_t : mod in, out, bin
 {
-    ;
-}
+    byte@ name;
+    byte name_length;
+};
+
+
+void print(byte@);
+void print(byte);
+void print(short);
+void print(int);
+void print(long);
+void print(float);
+void print(double);
