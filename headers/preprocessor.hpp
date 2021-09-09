@@ -1,5 +1,10 @@
 #pragma once
 
+#include <unordered_set>
+#include <fstream>
+#include <string>
+#include <sstream>
+
 class PreProcessor
 {
     std::ifstream file;
@@ -8,14 +13,8 @@ class PreProcessor
 
     void process(std::string);
     void import(std::string);
-    expr_t make_number();
-    expr_t make_identifier();
-    oper_t make_operator();
-    bool is_operator(char);
-    bool is_identifier(char);
-    bool is_valid_number_char(char);
-    bool is_operator(char);
-    
+
     public:
+    PreProcessor() = default;
     std::stringstream& operator()(std::string);
 };
