@@ -1,8 +1,15 @@
 #include "parser.hpp"
 
 
-ExprNode parse()
+expr_t parse(std::stringstream input)
 {
-    ExprNode root;
+    Lexer lxr(input);
+    token_t token = lxr.next_token();
+    expr_t root(token);
+    while (lxr.next_token(token))
+    {
+        root.add(token);
+    }
+    return root;
 }
 

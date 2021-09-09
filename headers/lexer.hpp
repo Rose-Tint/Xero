@@ -2,6 +2,7 @@
 
 #include <sstream>
 #include <unordered_set>
+#include <vector>
 #include "token.hpp"
 
 
@@ -20,6 +21,8 @@ class Lexer
     token_t make_symbol();
 
     public:
-    Lexer(std::stringstream input);
-    token_t next();
+    Lexer(std::stringstream);
+    token_t next_token();
+    bool next_token(token_t&)
+    std::vector<token_t> next_statement();
 };

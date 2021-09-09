@@ -1,6 +1,7 @@
 #pragma once
 
+#include <sstream>
 #include "expression.hpp"
 
 
-ExprNode parse();
+expr_t parse(std::stringstream);

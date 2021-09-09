@@ -64,7 +64,7 @@ token_t Lexer::make_symbol()
 }
 
 
-token_t Lexer::next()
+token_t Lexer::next_token()
 {
     char curr = code.peek();
     if (is_identifier(curr))
@@ -84,6 +84,47 @@ token_t Lexer::next()
         return make_symbol();
     }
     else throw -2;
+}
+
+
+bool Lexer::next_token(token_t& tok)
+{
+    if (code)
+    {
+        char curr = code.peek();
+        if (is_identifier(curr))
+        {
+            tok = make_identifier();
+        }
+        else if (is_operator(curr))
+        {
+            tok = make_operator();
+        }
+        else if (is_number_char(curr))
+        {
+            tok = make_number();
+        }
+        else if (is_symbol(curr))
+        {
+            tok = make_symbol();
+        }
+        else throw -2;
+        return true;
+    }
+    return false;
+}
+
+
+std::vector<token_t> Lexer::next_statement()
+{
+    char curr = code.peek();
+    token_t token = next_token();
+    std::vector<token_t> tokens { token };
+    while (token.type != ENDL && code.get(curr))
+    {
+        token = next_token();
+        tokens.push_back(token);
+    }
 }
 
 
