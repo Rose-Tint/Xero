@@ -23,6 +23,6 @@ class Lexer
     public:
     Lexer(std::stringstream);
     token_t next_token();
-    bool next_token(token_t&)
+    bool next_token(token_t&);
     std::vector<token_t> next_statement();
 };

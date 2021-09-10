@@ -8,7 +8,8 @@ class expr_t
     token_t token;
     expr_t* left = nullptr;
     expr_t* right = nullptr;
-    expr_t(const expr_t&);
+    expr_t(const expr_t&) = default;
+    expr_t operator=(const expr_t& other);
 
     public:
     ~expr_t();

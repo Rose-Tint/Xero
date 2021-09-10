@@ -19,11 +19,13 @@ struct token_t
 {
     const TokenType type;
     const std::string value;
-    bool is_final() const;
+    bool is_final() const { return (type == IDENTIFIER) || (type == LITERAL); }
+    token_t operator=(const token_t&);
 };
 
 
-bool token_t::is_final()
+token_t token_t::operator=(const token_t& other)
 {
-    return (type == IDENTIFIER) || (type == LITERAL));
+    token_t copy { other.type, other.value };
+    return copy;
 }

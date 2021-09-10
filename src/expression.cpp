@@ -4,15 +4,7 @@
 expr_t expr_t::operator=(const expr_t& other)
 {
     expr_t expr(other);
-}
-
-
-expr_t::expr_t(const expr_t& other)
-{
-    *left = other.left;
-    *right = other.right;
-    type = other.type;
-    token = other.token;
+    return expr;
 }
 
 
@@ -80,7 +72,7 @@ void expr_t::add(expr_t expr)
         }
         else left->add(expr);
     }
-    else if (token.type == UNOP || token.type = KEYWORD)
+    else if (token.type == UNOP || token.type == KEYWORD)
     {
         if (left == nullptr) *left = expr;
         else left->add(expr);

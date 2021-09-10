@@ -12,7 +12,9 @@ class PreProcessor
     std::unordered_set<std::string> imported;
 
     void process(std::string);
-    void import(std::string);
+
+    void import();
+    void define();
 
     public:
     PreProcessor() = default;
