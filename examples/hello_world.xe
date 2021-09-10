@@ -1,7 +1,0 @@
-import {xio}
-
-
-ubyte entry()
-{
-    stdout.print("Hello, World!");
-}
