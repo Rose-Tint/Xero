@@ -1,10 +1,11 @@
-null
-struct
 import
-operator
+true
+false
+struct
+fn
 alias
-template
 if
 else
 for
+over
 while

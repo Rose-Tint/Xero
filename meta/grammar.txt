@@ -1,40 +1,41 @@
-expr ::= expression
+statement         ::= expr+ ";"
 
-id ::= identifier
+block             ::= "{" statement* "}"
 
-sym ::= symbol
-      | {
-      | }
-      | [
-      | ]
-      | :
-      | (
-      | )
-      | "
-      | '
-      | ;
-      | ~
+type              ::= attr* (struct-name | primitive) ("@" | "#")?
 
-op ::= operator
-     | @
-     | %
-     | ^
-     | &
-     | *
-     | -
-     | =
-     | +
-     | <
-     | >
-     | ,
-     | .
-     | /
-     | |
+struct-decl       ::= "struct" name
 
-struct-decl ::= "struct" id (":" "mod" (id ",")+)?
+var-decl          ::= type name
 
-var-decl ::= mod* id ":" id
+arg               ::= var-name | literal | expr
 
-struct-def ::= struct-decl "{" expr* "}"
+arg-list          ::= "(" arg* ")"
 
-var-assignment ::= id "=" expr+
+param             ::= type name?
+
+param-decl-list   ::= "(" (param ":" arg ",")* ")"
+
+param-def-list    ::= "(" (var-decl ",")* ")"
+
+func-decl         ::= "fn" name param-decl-list type
+
+struct-def        ::= struct-decl "{" var-decl "}"
+
+func-def          ::= func-decl block
+
+struct-alias-def  ::= "alias" struct-decl ":" (name ",")+
+
+func-alias-def    ::= "alias" fn-name param-list type ":" (name ",")+
+
+assignment        ::= (var-decl | var-name) assignment-operator eval
+
+call              ::= func-name arg-list
+
+branch            ::= "if" "(" eval ")" block (("else" (branch | block)) | endl)
+
+for-loop          ::= "for" "(" statement ":" eval ":" statement ")" block
+
+over-loop         ::= "over" "(" var-decl ":" iterable ")" block
+
+while-loop        ::= "while" "(" eval ")" block
