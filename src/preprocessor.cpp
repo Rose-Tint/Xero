@@ -7,21 +7,13 @@ typedef std::unordered_set<std::string> str_set;
 void PreProcessor::process(std::string fname)
 {
     bool should_process = false;
-    std::ifstream file;
+    std::ifstream file(fname);
     char c = 0;
-    std::string str = "";
-
-    file.open(fname);
-
     while (file.get(c))
     {
         if (should_process)
         {
-            if (c == '\n')
-            {
-                should_process = false;
-                str.clear();
-            }
+            if (c == '\n') should_process = false;
             else direct(file);
         }
         else if (c == '~') should_process = true;
@@ -31,10 +23,10 @@ void PreProcessor::process(std::string fname)
 }
 
 
-std::string PreProcessor::get_between(std::ifstream& file, char left_trig, char right_trig)
+std::string PreProcessor::get_between(std::ifstream& file, char left, char right)
 {
-    ignore_until(file, left_trig);
-    return get_until(file, right_trig);
+    ignore_until(file, left);
+    return get_until(file, right);
 }
 
 

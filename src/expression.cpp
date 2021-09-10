@@ -56,26 +56,10 @@ bool expr_t::is_final() const
 }
 
 
-void expr_t::add(expr_t expr)
+unsigned int expr_t::get_depth() const
 {
-    if (token.is_final()) // base case
-    {
-        return;
-    }
-    else if (token.type == BIOP || token.type == ENCAP)
-    {
-        if (left == nullptr) *left = expr;
-        else if (left->is_final())
-        {
-            if (right == nullptr) *right = expr;
-            else right->add(expr);
-        }
-        else left->add(expr);
-    }
-    else if (token.type == UNOP || token.type == KEYWORD)
-    {
-        if (left == nullptr) *left = expr;
-        else left->add(expr);
-    }
-    else throw -2;
+    if (is_bottom()) return 1;
+    else if (left == nullptr) return right->get_depth();
+    else if (right == nullptr) return left->get_depth();
+    else return left->get_depth() + right->get_depth();
 }

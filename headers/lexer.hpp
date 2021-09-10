@@ -9,12 +9,14 @@
 class Lexer
 {
     std::stringstream code;
+
     bool is_identifier(char) const;
     bool is_number_char(char) const;
     bool is_symbol(char) const;
     bool is_potential_operator(char) const; // is at least the start of an operator
     bool is_potential_operator(std::string) const;
     bool is_operator(std::string) const;
+
     token_t make_number();
     token_t make_identifier();
     token_t make_operator();

@@ -4,4 +4,12 @@
 #include "expression.hpp"
 
 
-expr_t parse(std::stringstream);
+class Parser
+{
+    Lexer lxr;
+    expr_t ast;
+
+    public:
+    Parser(std::stringstream);
+    expr_t& operator()();
+};

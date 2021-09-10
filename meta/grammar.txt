@@ -1,8 +1,25 @@
+expr              ::= identifier
+                    | expr + expr
+                    | expr - expr
+                    | expr * expr
+                    | expr / expr
+                    | expr % expr
+                    | expr ^ expr
+                    | expr & expr
+                    | expr | expr
+                    | expr , expr
+                    | expr < expr
+                    | expr > expr
+                    | expr <= expr
+                    | expr >= expr
+                    | expr = expr
+                    | ( expr+ )
+
 statement         ::= expr+ ";"
 
 block             ::= "{" statement* "}"
 
-type              ::= attr* (struct-name | primitive) ("@" | "#")?
+type              ::= attr* ( struct-name | primitive ) ("@" | "#")?
 
 struct-decl       ::= "struct" name
 
@@ -14,9 +31,9 @@ arg-list          ::= "(" arg* ")"
 
 param             ::= type name?
 
-param-decl-list   ::= "(" (param ":" arg ",")* ")"
+param-decl-list   ::= "(" ( param ":" arg "," )* ")"
 
-param-def-list    ::= "(" (var-decl ",")* ")"
+param-def-list    ::= "(" ( var-decl "," )* ")"
 
 func-decl         ::= "fn" name param-decl-list type
 
@@ -24,18 +41,18 @@ struct-def        ::= struct-decl "{" var-decl "}"
 
 func-def          ::= func-decl block
 
-struct-alias-def  ::= "alias" struct-decl ":" (name ",")+
+struct-alias-def  ::= "alias" struct-decl ":" ( name "," )+
 
-func-alias-def    ::= "alias" fn-name param-list type ":" (name ",")+
+func-alias-def    ::= "alias" fn-name param-list type ":" ( name "," )+
 
-assignment        ::= (var-decl | var-name) assignment-operator eval
+assignment        ::= ( var-decl | var-name ) assignment-operator expr
 
 call              ::= func-name arg-list
 
-branch            ::= "if" "(" eval ")" block (("else" (branch | block)) | endl)
+branch            ::= "if" "(" expr ")" block ( ( "else" ( branch | block ) ) | endl )
 
-for-loop          ::= "for" "(" statement ":" eval ":" statement ")" block
+for-loop          ::= "for" "(" statement ":" expr ":" statement ")" block
 
 over-loop         ::= "over" "(" var-decl ":" iterable ")" block
 
-while-loop        ::= "while" "(" eval ")" block
+while-loop        ::= "while" "(" expr ")" block

@@ -1,0 +1,27 @@
+~import {xio}
+~import {xalias}
+
+
+struct String
+{
+    char@ data;
+    ubyte size;
+};
+
+
+fn make_string(char@ input) String
+{
+    size = sizeof(input);
+    data = char[size];
+    for (ubyte i = 0 : i < size : i++)
+    {
+        data[i] = input[i];
+    };
+};
+
+
+fn entry(void) ubyte
+{
+    String str = make_string("Hello, World!");
+    print(str.data);
+};

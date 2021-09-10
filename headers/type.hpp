@@ -9,6 +9,12 @@ struct Type
 };
 
 
+struct Var
+{
+    Type type;
+};
+
+
 constexpr Type Void{ 0 };
 constexpr Type Float{ 2 };
 constexpr Type Double{ 4 };

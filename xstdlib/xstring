@@ -1,0 +1,11 @@
+struct xstring
+{
+    char@ data;
+    xstring(const byte@);
+    xstring@();
+};
+
+fn init_xstring(xstring@ str, const byte@ input) void
+{
+    str.data = new byte[lit_len(input)];
+};

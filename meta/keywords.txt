@@ -1,4 +1,3 @@
-import
 true
 false
 struct

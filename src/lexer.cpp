@@ -48,7 +48,6 @@ token_t Lexer::make_identifier()
     {
         id += curr;
     }
-
     return { TokenType::IDENTIFIER, id };
 }
 
@@ -114,6 +113,7 @@ std::vector<token_t> Lexer::next_statement()
         token = next_token();
         tokens.push_back(token);
     }
+    return tokens;
 }
 
 
