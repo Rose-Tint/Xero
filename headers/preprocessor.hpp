@@ -7,14 +7,27 @@
 
 class PreProcessor
 {
-    std::ifstream file;
+    typedef std::unordered_set<std::string> str_set;
+
     std::stringstream code;
-    std::unordered_set<std::string> imported;
+    str_set imported;
+    str_set defined;
+
+    // utils
+    void check_and_recurse(str_set&, std::string);
+    void ignore_until(std::ifstream&, char);
+    std::string get_until(std::ifstream&, char);
+    std::string get_between(std::ifstream&, char, char);
 
     void process(std::string);
 
-    void import();
-    void define();
+    // directives
+    void direct(std::ifstream&);
+    void import(std::ifstream&);
+    void define(std::ifstream&);
+    void ifdef(std::ifstream&);
+    void ifnotdef(std::ifstream&);
+    void then(std::ifstream&);
 
     public:
     PreProcessor() = default;
