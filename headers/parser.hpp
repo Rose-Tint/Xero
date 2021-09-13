@@ -1,6 +1,7 @@
 #pragma once
 
 #include <sstream>
+
 #include "expression.hpp"
 #include "lexer.hpp"
 #include "scope.hpp"
