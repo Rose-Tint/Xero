@@ -143,6 +143,22 @@ protected:
 };
 
 
+struct TypeExpr : Expr
+{
+    virtual expr_id_t id() const override { return TYPE; };
+
+    TypeExpr(const TypeExpr&);
+    TypeExpr(TypeExpr&&);
+    TypeExpr& operator=(const TypeExpr&);
+    TypeExpr& operator=(TypeExpr&&);
+
+protected:
+    virtual TypeExpr* clone() const override { return new TypeExpr(*this); }
+
+    TerminalExpr* name;
+};
+
+
 struct ParamListExpr final : ListExpr
 {
     virtual expr_id_t id() const override { return PARAM_LIST; };
