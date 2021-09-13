@@ -2,14 +2,15 @@
 
 #include <sstream>
 #include "expression.hpp"
+#include "lexer.hpp"
 
 
 class Parser
 {
     Lexer lxr;
-    expr_t ast;
+    Expr* ast;
 
     public:
     Parser(std::stringstream);
-    expr_t& operator()();
+    Expr* operator()();
 };

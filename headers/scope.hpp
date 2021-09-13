@@ -14,9 +14,9 @@ class Scope
 
 public:
     void add_var(std::string);
-    void add_fn(...);
+    void add_fn(); // need to figure out what the params should be
     void add_struct(std::string);
 
-    bool contains(expr_t);
+    bool contains(Expr*);
     Scope(const Scope&);
 };
