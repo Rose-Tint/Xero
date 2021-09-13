@@ -1,11 +1,17 @@
 struct xstring
 {
-    char@ data;
+    private char@ data;
     xstring(const byte@);
     xstring@();
+    fn substr(ubyte) xstring;
 };
 
-fn init_xstring(xstring@ str, const byte@ input) void
+struct xstring_view
 {
-    str.data = new byte[lit_len(input)];
+    private xstring str;
+};
+
+xstring(const byte@ input) void
+{
+    str.data = alloc byte[lit_len(input)];
 };

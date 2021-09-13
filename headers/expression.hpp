@@ -184,3 +184,50 @@ struct DeclaratorExpr final : NonTerminalExpr
     enum { BRACES, BRACKETS, PARENS, ANGLES } enclosure_type;
 };
 
+struct BlockExpr : Expr
+{
+    BlockExpr(const BlockExpr&);
+    BlockExpr(const BlockExpr&&);
+    BlockExpr& operator=(const BlockExpr&);
+    BlockExpr& operator=(const BlockExpr&&);
+
+    protected:
+    Expr** exprs;
+};
+
+
+struct FlowControl : Expr
+{
+    FlowControl(const FlowControl&);
+    FlowControl(const FlowControl&&);
+    FlowControl& operator=(const FlowControl&);
+    FlowControl& operator=(const FlowControl&&);
+    BlockExpr* body;
+};
+
+
+struct Loop : Expr
+{
+    Loop(const Loop&);
+    Loop(const Loop&&);
+    Loop& operator=(const Loop&);
+    Loop& operator=(const Loop&&);
+
+    protected:
+    Expr* before;
+    Expr* condition;
+    Expr* each;
+};
+
+
+struct IfElse : Expr
+{
+    IfElse(const IfElse&);
+    IfElse(const IfElse&&);
+    IfElse& operator=(const IfElse&);
+    IfElse& operator=(const IfElse&&);
+
+    protected:
+    Expr* condition;
+    Expr* else_body;
+};
