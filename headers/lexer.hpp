@@ -1,7 +1,7 @@
 #pragma once
 
 #include <sstream>
-#include <vector>
+#include <memory>
 
 #include "token.hpp"
 
@@ -17,14 +17,12 @@ class Lexer
     bool is_potential_operator(std::string) const;
     bool is_operator(std::string) const;
 
-    Token* make_number();
-    Token* make_identifier();
-    Token* make_operator();
-    Token* make_symbol();
+    NumLitToken* make_number();
+    IdentifierToken* make_identifier();
+    OperatorToken* make_operator();
+    SymbolToken* make_symbol();
 
     public:
     Lexer(std::stringstream&);
-    Token next_token();
-    bool next_token(Token&);
-    std::vector<Token> next_statement();
+    bool next_token(Token*);
 };
