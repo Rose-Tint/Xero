@@ -1,58 +1,83 @@
-expr              ::= identifier
-                    | expr + expr
-                    | expr - expr
-                    | expr * expr
-                    | expr / expr
-                    | expr % expr
-                    | expr ^ expr
-                    | expr & expr
-                    | expr | expr
-                    | expr , expr
-                    | expr < expr
-                    | expr > expr
-                    | expr <= expr
-                    | expr >= expr
-                    | expr = expr
-                    | ( expr+ )
+expr
+    | "(" expr ")"
+    | non-terminal
 
-statement         ::= expr+ ";"
+un-op
+    | "@"
+    | "#"
+    | "++"
+    | "--"
+    | "!"
 
-block             ::= "{" statement* "}"
+bin-op
+    | "+"
+    | "-"
+    | "*"
+    | "/"
+    | "%"
+    | "<"
+    | "<="
+    | "<="
+    | "<="
+    | "="
+    | "|"
+    | "&"
+    | "^"
+    | ","
 
-type              ::= attr* ( struct-name | primitive ) ("@" | "#")?
+assign-op
+    | ":="
+    | "+="
+    | "-="
+    | "*="
+    | "/="
+    | "%="
+    | "|="
+    | "&="
+    | "^="
 
-struct-decl       ::= "struct" name
+un-expr
+    | un-op terminal
+    | un-op un-expr
+    | terminal un-op
+    | un-expr un-op
+    | un-op "(" non-terminal ")"
+    | un-op un-expr
+    | "(" non-terminal ")" un-op
+    | un-expr un-op
 
-var-decl          ::= type name
+terminal
+    | IDENTIFIER
+    | LITERAL
 
-arg               ::= var-name | literal | expr
+non-terminal
+    | terminal
+    | non-terminal BINARY non-terminal
+    | non-terminal un-op
+    | un-op non-terminal
 
-arg-list          ::= "(" arg* ")"
+param-list
+    | TYPE
+    | TYPE IDENTIFIER
+    | TYPE "," param-list
 
-param             ::= type name?
+arg-list
+    | non-terminal
+    | non-terminal "," arg-list
 
-param-decl-list   ::= "(" ( param ":" arg "," )* ")"
+ptr
+    | "@"
+    | "@" ptr
 
-param-def-list    ::= "(" ( var-decl "," )* ")"
+declarator
+    | direct-declr
+    | ptr direct-declr
 
-func-decl         ::= "fn" name param-decl-list type
-
-struct-def        ::= struct-decl "{" var-decl "}"
-
-func-def          ::= func-decl block
-
-struct-alias-def  ::= "alias" struct-decl ":" ( name "," )+
-
-func-alias-def    ::= "alias" fn-name param-list type ":" ( name "," )+
-
-assignment        ::= ( var-decl | var-name ) assignment-operator expr
-
-call              ::= func-name arg-list
-
-branch            ::= "if" "(" expr ")" block ( ( "else" ( branch | block ) ) | endl )
-
-for-loop          ::= "for" "(" statement ":" expr ":" statement ")" block
-
-over-loop         ::= "over" "(" var-decl ":" iterable ")" block
-
-while-loop        ::= "while" "(" expr ")" block
+direct-declr
+    | IDENTIFIER
+    | "(" declarator ")"
+    | direct-declr "[" NUMBER "]"
+    | direct-declr "[" "]"
+    | direct-declr "(" arg-list ")"
+    | direct-declr "(" param-list ")"
+    | direct-declr "(" ")"
