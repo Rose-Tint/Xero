@@ -1,0 +1,5 @@
+struct xbitmask
+{
+    private byte bits;
+    operator[](ubyte) -> bool;
+};
