@@ -3,7 +3,10 @@
 #include "expression.hpp"
 
 
-struct Statement { };
+struct Statement : Expr
+{
+    ;
+};
 
 struct Block : Statement
 {
@@ -12,7 +15,10 @@ struct Block : Statement
     // Statement** statements;
 };
 
-struct Loop : Block { };
+struct Loop : Block
+{
+    ;
+};
 
 struct While : Loop
 {

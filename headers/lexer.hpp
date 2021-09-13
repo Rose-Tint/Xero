@@ -17,10 +17,10 @@ class Lexer
     bool is_potential_operator(std::string) const;
     bool is_operator(std::string) const;
 
-    Token make_number();
-    Token make_identifier();
-    Token make_operator();
-    Token make_symbol();
+    Token* make_number();
+    Token* make_identifier();
+    Token* make_operator();
+    Token* make_symbol();
 
     public:
     Lexer(std::stringstream&);

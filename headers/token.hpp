@@ -8,7 +8,7 @@ typedef unsigned char id_t;
 
 struct Token
 {
-    virtual constexpr id_t id() const = 0;
+    virtual constexpr id_t id() const;
 
     explicit Token(std::string);
 
