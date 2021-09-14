@@ -9,11 +9,8 @@ enum token_id_t : unsigned char
     IDENTIFIER,
     KEYWORD,
     SYMBOL,
-    SEP,
-    OPERATOR,
     BINARY_OP,
     UNARY_OP,
-    LITERAL,
     NUMBER,
     STR_LIT
 };
@@ -21,7 +18,7 @@ enum token_id_t : unsigned char
 
 struct Token
 {
-    virtual constexpr token_id_t id() const { return TOKEN; };
+    virtual constexpr token_id_t id() const = 0;
     virtual Token* clone() const { return new Token(*this); }
 
     explicit Token(const std::string& str) : value(str) {}
@@ -38,19 +35,11 @@ struct IdentifierToken final : Token
 };
 
 
-struct SymbolToken : Token
+struct SymbolToken final : Token
 {
     SymbolToken(const std::string& str) : Token(str) { }
     virtual constexpr token_id_t id() const override { return SYMBOL; }
     virtual SymbolToken* clone() const { return new SymbolToken(*this); }
-};
-
-
-struct SeperatorToken final : SymbolToken
-{
-    SeperatorToken(const std::string& str) : SymbolToken(str) { }
-    virtual constexpr token_id_t id() const override { return SEP; }
-    virtual SeperatorToken* clone() const { return new SeperatorToken(*this); }
 };
 
 
@@ -65,7 +54,7 @@ struct KeywordToken final : Token
 struct OperatorToken : Token
 {
     OperatorToken(const std::string& str) : Token(str) { }
-    virtual constexpr token_id_t id() const override { return OPERATOR; }
+    virtual constexpr token_id_t id() const = 0;
     virtual OperatorToken* clone() const { return new OperatorToken(*this); }
 };
 
@@ -89,7 +78,7 @@ struct UnaryOpToken final : OperatorToken
 struct LiteralToken : Token
 {
     LiteralToken(const std::string& str) : Token(str) { }
-    virtual constexpr token_id_t id() const override { return LITERAL; }
+    virtual constexpr token_id_t id() const = 0;
     virtual LiteralToken* clone() const { return new LiteralToken(*this); }
 };
 

@@ -21,6 +21,7 @@ enum expr_id_t : unsigned char
     DECLARATOR,
     TYPE,
     FLOW_CTRL,
+    STATEMENT,
     BLOCK,
     LOOP,
     IF_ELSE,
@@ -37,6 +38,7 @@ struct Expr
     virtual void add(Expr*); // determines how to add an Expr* depending on both of the id() call
     virtual constexpr bool is_terminal() const = 0;
     virtual bool terminates() const = 0;
+    virtual Expr* get_lowest_free() const = 0;
 
     virtual ~Expr();
     Expr(const Expr&);
@@ -46,7 +48,7 @@ struct Expr
 
     Token* get_token() const { return token; }
 
-protected:
+    protected:
     virtual Expr* clone() const { return new Expr(*this); }
     explicit Expr(const Token*);
     Expr();
@@ -57,11 +59,12 @@ protected:
 struct NonTerminalExpr : Expr
 {
     virtual expr_id_t id() const override { return NONTERMINAL; };
-    virtual void add(Expr*) override;
+    virtual void add(Expr*) = 0;
     virtual constexpr bool is_terminal() const override { return false; }
-    virtual bool terminates() const override;
+    virtual bool terminates() const = 0;
+    virtual NonTerminalExpr* get_lowest_free() const = 0;
 
-protected:
+    protected:
     virtual NonTerminalExpr* clone() const override { return new NonTerminalExpr(*this); }
 
     NonTerminalExpr(const NonTerminalExpr& other) : Expr(other) { };
@@ -74,17 +77,18 @@ protected:
 struct TerminalExpr : NonTerminalExpr
 {
     virtual expr_id_t id() const override { return TERMINAL; };
-    virtual void add(Expr*) override
+    virtual void add(Expr*) = 0;
     virtual constexpr bool is_terminal() const final override { return true; }
     virtual bool terminates() const override;
+    virtual NonTerminalExpr* get_lowest_free() const = 0;
 
-protected:
+    TerminalExpr(Token* tok) : NonTerminalExpr(tok) { }
+
+    protected:
     virtual TerminalExpr* clone() const override { return new TerminalExpr(*this); }
 
     TerminalExpr(const TerminalExpr& other) : NonTerminalExpr(other) { };
     TerminalExpr(TerminalExpr&& other) : NonTerminalExpr(other) { };
-
-    TerminalExpr(Token* tok) : NonTerminalExpr(tok) { };
 };
 
 
@@ -93,6 +97,7 @@ struct BinaryExpr final : NonTerminalExpr
     virtual expr_id_t id() const override { return BINARY; };
     virtual void add(Expr*) override;
     virtual bool terminates() const override;
+    virtual NonTerminalExpr* get_lowest_free() const override;
 
     virtual ~BinaryExpr() override;
     BinaryExpr(const BinaryExpr&);
@@ -105,7 +110,7 @@ struct BinaryExpr final : NonTerminalExpr
     NonTerminalExpr* get_left() const { return left; }
     NonTerminalExpr* get_right() const { return right; }
 
-protected:
+    protected:
     virtual BinaryExpr* clone() const override { return new BinaryExpr(*this); }
     NonTerminalExpr* left;
     NonTerminalExpr* right;
@@ -117,6 +122,7 @@ struct UnaryExpr final : NonTerminalExpr
     virtual expr_id_t id() const override { return UNARY; };
     virtual void add(Expr*) override;
     virtual bool terminates() const override;
+    virtual NonTerminalExpr* get_lowest_free() const override;
 
     virtual ~UnaryExpr() override;
     UnaryExpr(const UnaryExpr&);
@@ -128,7 +134,7 @@ struct UnaryExpr final : NonTerminalExpr
 
     NonTerminalExpr* get_operand() const { return operand; }
 
-protected:
+    protected:
     virtual UnaryExpr* clone() const override { return new UnaryExpr(*this); }
     NonTerminalExpr* operand;
 };
@@ -139,6 +145,7 @@ struct ListExpr : NonTerminalExpr
     virtual expr_id_t id() const override { return LIST; };
     virtual void add(Expr*) = 0;
     virtual bool terminates() const = 0;
+    virtual NonTerminalExpr* get_lowest_free() const override;
 
     virtual ~ListExpr() override;
     ListExpr(const ListExpr&);
@@ -150,7 +157,7 @@ struct ListExpr : NonTerminalExpr
 
     ListExpr* get_next() const { return next; }
 
-protected:
+    protected:
     virtual ListExpr* clone() const override { return new ListExpr(*this); }
     ListExpr* next;
 };
@@ -161,13 +168,14 @@ struct TypeExpr : NonTerminalExpr
     virtual expr_id_t id() const override { return TYPE; };
     virtual void add(Expr*) override;
     virtual bool terminates() const override;
+    virtual NonTerminalExpr* get_lowest_free() const override;
 
     TypeExpr(const TypeExpr&);
     TypeExpr(TypeExpr&&);
     TypeExpr& operator=(const TypeExpr&);
     TypeExpr& operator=(TypeExpr&&);
 
-protected:
+    protected:
     virtual TypeExpr* clone() const override { return new TypeExpr(*this); }
     TerminalExpr* name;
 };
@@ -178,6 +186,7 @@ struct ParamListExpr final : ListExpr
     virtual expr_id_t id() const override { return PARAM_LIST; };
     virtual void add(Expr*) override;
     virtual bool terminates() const override;
+    virtual NonTerminalExpr* get_lowest_free() const override;
 
     virtual ~ParamListExpr() override;
     ParamListExpr(const ParamListExpr&);
@@ -190,7 +199,7 @@ struct ParamListExpr final : ListExpr
     TypeExpr* get_type() const { return type; }
     TerminalExpr* get_name() const { return name; }
 
-protected:
+    protected:
     virtual ParamListExpr* clone() const override { return new ParamListExpr(*this); }
     TypeExpr* type;
     TerminalExpr* name;
@@ -202,6 +211,7 @@ struct PointerExpr final : NonTerminalExpr
     virtual expr_id_t id() const override { return POINTER; };
     virtual void add(Expr*) override;
     virtual bool terminates() const override;
+    virtual NonTerminalExpr* get_lowest_free() const override;
 
     virtual ~PointerExpr() override;
     PointerExpr(const PointerExpr&);
@@ -211,7 +221,7 @@ struct PointerExpr final : NonTerminalExpr
 
     PointerExpr(Token*, PointerExpr* = nullptr);
 
-protected:
+    protected:
     virtual PointerExpr* clone() const override { return new PointerExpr(*this); }
     PointerExpr* ptr;
 };
@@ -222,6 +232,7 @@ struct DeclaratorExpr final : NonTerminalExpr
     virtual expr_id_t id() const override { return DECLARATOR; };
     virtual void add(Expr*) override;
     virtual bool terminates() const override;
+    virtual NonTerminalExpr* get_lowest_free() const override;
 
     virtual ~DeclaratorExpr() override;
     DeclaratorExpr(const DeclaratorExpr&);
@@ -232,7 +243,7 @@ struct DeclaratorExpr final : NonTerminalExpr
     DeclaratorExpr(Token* tok, Token* = nullptr, Token* = nullptr, TerminalExpr* = nullptr, PointerExpr* = nullptr);
     DeclaratorExpr(Token* tok, Token* = nullptr, Token* = nullptr, ListExpr* = nullptr, PointerExpr* = nullptr);
 
-protected:
+    protected:
     virtual DeclaratorExpr* clone() const override { return new DeclaratorExpr(*this); }
     union
     {
@@ -248,9 +259,10 @@ protected:
 
 struct StatementExpr : Expr
 {
-    virtual expr_id_t id() const override { return BLOCK; };
+    virtual expr_id_t id() const override { return STATEMENT; };
     virtual void add(Expr*) override;
     virtual bool terminates() const override;
+    virtual NonTerminalExpr* get_lowest_free() const override;
 
     StatementExpr(const StatementExpr&);
     StatementExpr(StatementExpr&&);
@@ -259,8 +271,8 @@ struct StatementExpr : Expr
 
     StatementExpr(Token* tok, Expr*);
 
-protected:
-    virtual BlockExpr* clone() const override { return new BlockExpr(*this); }
+    protected:
+    virtual StatementExpr* clone() const override { return new StatementExpr(*this); }
 
     std::vector<NonTerminalExpr*> exprs;
 };
@@ -271,6 +283,7 @@ struct BlockExpr : Expr
     virtual expr_id_t id() const override { return BLOCK; };
     virtual void add(Expr*) override;
     virtual bool terminates() const override;
+    virtual NonTerminalExpr* get_lowest_free() const override;
 
     BlockExpr(const BlockExpr&);
     BlockExpr(BlockExpr&&);
@@ -279,7 +292,9 @@ struct BlockExpr : Expr
 
     BlockExpr(const Token* tok) : Expr(tok) {}
 
-protected:
+    const std::vector<StatementExpr*>& get_exprs() const;
+
+    protected:
     virtual BlockExpr* clone() const override { return new BlockExpr(*this); }
 
     std::vector<StatementExpr*> exprs;
@@ -291,31 +306,33 @@ struct FlowControlExpr : Expr
     virtual expr_id_t id() const override { return FLOW_CTRL; };
     virtual void add(Expr*) override;
     virtual bool terminates() const override;
+    virtual NonTerminalExpr* get_lowest_free() const override;
 
     FlowControlExpr(const FlowControlExpr&);
     FlowControlExpr(FlowControlExpr&&);
     FlowControlExpr& operator=(const FlowControlExpr&);
     FlowControlExpr& operator=(FlowControlExpr&&);
 
-protected:
+    protected:
     virtual FlowControlExpr* clone() const override { return new FlowControlExpr(*this); }
 
     BlockExpr* body;
 };
 
 
-struct LoopExpr : Expr
+struct LoopExpr : FlowControlExpr
 {
     virtual expr_id_t id() const override { return LOOP; };
     virtual void add(Expr*) override;
     virtual bool terminates() const override;
+    virtual NonTerminalExpr* get_lowest_free() const override;
 
     LoopExpr(const LoopExpr&);
     LoopExpr(LoopExpr&&);
     LoopExpr& operator=(const LoopExpr&);
     LoopExpr& operator=(LoopExpr&&);
 
-protected:
+    protected:
     virtual LoopExpr* clone() const override { return new LoopExpr(*this); }
 
     NonTerminalExpr* before;
@@ -324,30 +341,33 @@ protected:
 };
 
 
-struct IfElseExpr : Expr
+struct IfElseExpr : FlowControlExpr
 {
     virtual expr_id_t id() const override { return IF_ELSE; };
     virtual void add(Expr*) override;
     virtual bool terminates() const override;
+    virtual NonTerminalExpr* get_lowest_free() const override;
 
     IfElseExpr(const IfElseExpr&);
     IfElseExpr(IfElseExpr&&);
     IfElseExpr& operator=(const IfElseExpr&);
     IfElseExpr& operator=(IfElseExpr&&);
 
-protected:
+    protected:
     virtual IfElseExpr* clone() const override { return new IfElseExpr(*this); }
 
     Expr* condition;
+    bool has_else;
     Expr* else_body;
 };
 
 
-struct FuncDeclExpr : Expr
+struct FuncDeclExpr : StatementExpr
 {
     virtual expr_id_t id() const override { return FUNCTION_DECLARATION; };
     virtual void add(Expr*) override;
     virtual bool terminates() const override;
+    virtual NonTerminalExpr* get_lowest_free() const override;
 
     FuncDeclExpr(const FuncDeclExpr&);
     FuncDeclExpr(FuncDeclExpr&&);
@@ -356,7 +376,7 @@ struct FuncDeclExpr : Expr
 
     std::int16_t get_signature() const;
 
-protected:
+    protected:
     virtual FuncDeclExpr* clone() const override { return new FuncDeclExpr(*this); }
 
     DeclaratorExpr* declarator;
@@ -364,18 +384,19 @@ protected:
 };
 
 
-struct VarDeclExpr : Expr
+struct VarDeclExpr : StatementExpr
 {
     virtual expr_id_t id() const override { return VAR_DECLARATION; };
     virtual void add(Expr*) override;
     virtual bool terminates() const override;
+    virtual NonTerminalExpr* get_lowest_free() const override;
 
     VarDeclExpr(const VarDeclExpr&);
     VarDeclExpr(VarDeclExpr&&);
     VarDeclExpr& operator=(const VarDeclExpr&);
     VarDeclExpr& operator=(VarDeclExpr&&);
 
-protected:
+    protected:
     virtual VarDeclExpr* clone() const override { return new VarDeclExpr(*this); }
 
     TypeExpr* type;
@@ -383,13 +404,14 @@ protected:
 };
 
 
-struct MemberDeclExpr : Expr
+struct MemberDeclExpr : StatementExpr
 {
     virtual expr_id_t id() const override { return STRUCT_MEMBER; };
     virtual void add(Expr*) override;
     virtual bool terminates() const override;
+    virtual NonTerminalExpr* get_lowest_free() const override;
 
-protected:
+    protected:
     virtual MemberDeclExpr* clone() const override { return new MemberDeclExpr(*this); }
 
     bool _private;
@@ -402,13 +424,14 @@ struct StructDefExpr : Expr
     virtual expr_id_t id() const override { return STRUCT_DEF; };
     virtual void add(Expr*) override;
     virtual bool terminates() const override;
+    virtual NonTerminalExpr* get_lowest_free() const override;
 
     StructDefExpr(const StructDefExpr&);
     StructDefExpr(StructDefExpr&&);
     StructDefExpr& operator=(const StructDefExpr&);
     StructDefExpr& operator=(StructDefExpr&&);
 
-protected:
+    protected:
     virtual StructDefExpr* clone() const override { return new StructDefExpr(*this); }
 
     TypeExpr* type;
@@ -416,4 +439,4 @@ protected:
 };
 
 
-const BlockExpr& = BlockExpr(Token("TOP_LEVEL"));
+const BlockExpr& top_level_ref = BlockExpr(Token("TOP_LEVEL"));

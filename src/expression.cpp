@@ -81,7 +81,6 @@ void BinaryExpr::add(Expr* expr)
         if (left == nullptr)
         {
             left = non_terminal->clone();
-            delete expr;
             return;
         }
         else if (!(left->terminates()))
@@ -92,7 +91,6 @@ void BinaryExpr::add(Expr* expr)
         else if (right == nullptr)
         {
             right = non_terminal->clone();
-            delete expr;
             return;
         }
         else if (!(right->terminates()))
@@ -113,7 +111,6 @@ void UnaryExpr::add(Expr* expr)
         if (operand == nullptr)
         {
             operand = non_terminal->clone();
-            delete expr;
             return;
         }
         else if (!(operand->terminates()))
@@ -132,7 +129,6 @@ void TypeExpr::add(Expr* expr)
     if (terminal && name == nullptr)
     {
         name = terminal->clone();
-        delete expr;
         return;
     }
     delete expr;
@@ -148,7 +144,6 @@ void ParamListExpr::add(Expr* expr)
         if (type == nullptr)
         {
             type = _type->clone();
-            delete expr;
             return;
         }
         else if (!(type->terminates()))
@@ -162,7 +157,6 @@ void ParamListExpr::add(Expr* expr)
         if (name == nullptr)
         {
             name = _name->clone();
-            delete expr;
             return;
         }
         else if (!(name->terminates()))
@@ -183,7 +177,6 @@ void PointerExpr::add(Expr* expr)
         if (ptr == nullptr)
         {
             ptr = _ptr->clone();
-            delete expr;
             return;
         }
         else if (!(ptr->terminates()))
