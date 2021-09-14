@@ -31,7 +31,7 @@ ListExpr::ListExpr(Token* tok, ListExpr* _next)
 }
 
 
-ParamListExpr::ParamListExpr(Token* tok, TypeExpr* _type, TerminalExpr* _name, ParamListExpr* params)
+ParamListExpr::ParamListExpr(Token* tok, ParamListExpr* params, TypeExpr* _type, TerminalExpr* _name)
     : ListExpr(tok, params)
 {
     type = _type;
@@ -68,6 +68,135 @@ DeclaratorExpr::DeclaratorExpr(struct Token* tok, struct Token* _name, struct To
         case ('['): enclosure_type = BRACKETS; break;
     }
 }
+
+
+// VIRTUAL ADD
+
+
+void BinaryExpr::add(Expr* expr)
+{
+    auto non_terminal = dynamic_cast<NonTerminalExpr*>(expr);
+    if (non_terminal)
+    {
+        if (left == nullptr)
+        {
+            left = non_terminal->clone();
+            delete expr;
+            return;
+        }
+        else if (!(left->terminates()))
+        {
+            left->add(expr);
+            return;
+        }
+        else if (right == nullptr)
+        {
+            right = non_terminal->clone();
+            delete expr;
+            return;
+        }
+        else if (!(right->terminates()))
+        {
+            left->add(expr);
+            return;
+        }
+    }
+    delete expr;
+    throw -2;
+}
+
+void UnaryExpr::add(Expr* expr)
+{
+    auto non_terminal = dynamic_cast<NonTerminalExpr*>(expr);
+    if (non_terminal)
+    {
+        if (operand == nullptr)
+        {
+            operand = non_terminal->clone();
+            delete expr;
+            return;
+        }
+        else if (!(operand->terminates()))
+        {
+            operand->add(expr);
+            return;
+        }
+    }
+    delete expr;
+    throw -2;
+}
+
+void TypeExpr::add(Expr* expr)
+{
+    auto terminal = dynamic_cast<TerminalExpr*>(expr);
+    if (terminal && name == nullptr)
+    {
+        name = terminal->clone();
+        delete expr;
+        return;
+    }
+    delete expr;
+    throw -2;
+}
+
+void ParamListExpr::add(Expr* expr)
+{
+    auto _type = dynamic_cast<TypeExpr*>(expr);
+    auto _name = dynamic_cast<TerminalExpr*>(expr);
+    if (_type)
+    {
+        if (type == nullptr)
+        {
+            type = _type->clone();
+            delete expr;
+            return;
+        }
+        else if (!(type->terminates()))
+        {
+            type->add(expr);
+            return;
+        }
+    }
+    if (_name)
+    {
+        if (name == nullptr)
+        {
+            name = _name->clone();
+            delete expr;
+            return;
+        }
+        else if (!(name->terminates()))
+        {
+            name->add(expr);
+            return;
+        }
+    }
+    delete expr;
+    throw -2;
+}
+
+void PointerExpr::add(Expr* expr)
+{
+    auto _ptr = dynamic_cast<PointerExpr*>(expr);
+    if (_ptr)
+    {
+        if (ptr == nullptr)
+        {
+            ptr = _ptr->clone();
+            delete expr;
+            return;
+        }
+        else if (!(ptr->terminates()))
+        {
+            ptr->add(expr);
+            return
+        }
+    }
+    delete expr;
+    throw -2;
+}
+
+// TODO: DeclaratorExpr AND ON
 
 
 // RULE OF 5s
