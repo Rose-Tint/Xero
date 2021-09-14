@@ -10,10 +10,10 @@
 class Parser
 {
     Lexer lxr;
-    Expr* ast;
+    Expr* root;
     Scope scp;
 
     public:
-    Parser(std::stringstream);
+    Parser(std::stringstream&);
     Expr* operator()();
 };

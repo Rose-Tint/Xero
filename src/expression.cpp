@@ -4,9 +4,10 @@
 // NORMAL CONSTRUCTORS
 
 
-Expr::Expr(Token* tok) : token(tok->clone())
+Expr::Expr(const Token* tok)
+    : token(tok->clone())
 {
-    token = tok->clone();
+    ;
 }
 
 

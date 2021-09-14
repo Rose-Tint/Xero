@@ -34,8 +34,7 @@ enum expr_id_t : unsigned char
 struct Expr
 {
     virtual expr_id_t id() const { return EXPR; };
-
-    explicit Expr(Token*);
+    virtual void add(Expr*); // determines how to add an Expr* depending on both of the id() call
 
     virtual ~Expr();
     Expr(const Expr&);
@@ -43,7 +42,8 @@ struct Expr
     Expr& operator=(const Expr&);
     Expr& operator=(Expr&&);
 
-    Expr() = delete;
+    explicit Expr(const Token*);
+    Expr();
 
     Token* get_token() const { return token; }
 
@@ -56,6 +56,7 @@ protected:
 struct NonTerminalExpr : Expr
 {
     virtual expr_id_t id() const override { return NONTERMINAL; };
+    virtual void add(Expr*) override;
 
 protected:
     virtual NonTerminalExpr* clone() const override { return new NonTerminalExpr(*this); }
@@ -70,6 +71,7 @@ protected:
 struct TerminalExpr : NonTerminalExpr
 {
     virtual expr_id_t id() const override { return TERMINAL; };
+    virtual void add(Expr*) override;
 
 protected:
     virtual TerminalExpr* clone() const override { return new TerminalExpr(*this); }
@@ -84,6 +86,7 @@ protected:
 struct BinaryExpr final : NonTerminalExpr
 {
     virtual expr_id_t id() const override { return BINARY; };
+    virtual void add(Expr*) override;
 
     virtual ~BinaryExpr() override;
     BinaryExpr(const BinaryExpr&);
@@ -106,6 +109,7 @@ protected:
 struct UnaryExpr final : NonTerminalExpr
 {
     virtual expr_id_t id() const override { return UNARY; };
+    virtual void add(Expr*) override;
 
     virtual ~UnaryExpr() override;
     UnaryExpr(const UnaryExpr&);
@@ -126,6 +130,7 @@ protected:
 struct ListExpr : NonTerminalExpr
 {
     virtual expr_id_t id() const override { return LIST; };
+    virtual void add(Expr*) override;
 
     virtual ~ListExpr() override;
     ListExpr(const ListExpr&);
@@ -146,6 +151,7 @@ protected:
 struct TypeExpr : Expr
 {
     virtual expr_id_t id() const override { return TYPE; };
+    virtual void add(Expr*) override;
 
     TypeExpr(const TypeExpr&);
     TypeExpr(TypeExpr&&);
@@ -162,6 +168,7 @@ protected:
 struct ParamListExpr final : ListExpr
 {
     virtual expr_id_t id() const override { return PARAM_LIST; };
+    virtual void add(Expr*) override;
 
     virtual ~ParamListExpr() override;
     ParamListExpr(const ParamListExpr&);
@@ -184,6 +191,7 @@ protected:
 struct PointerExpr final : NonTerminalExpr
 {
     virtual expr_id_t id() const override { return POINTER; };
+    virtual void add(Expr*) override;
 
     virtual ~PointerExpr() override;
     PointerExpr(const PointerExpr&);
@@ -202,6 +210,7 @@ protected:
 struct DeclaratorExpr final : NonTerminalExpr
 {
     virtual expr_id_t id() const override { return DECLARATOR; };
+    virtual void add(Expr*) override;
 
     virtual ~DeclaratorExpr() override;
     DeclaratorExpr(const DeclaratorExpr&);
@@ -229,15 +238,17 @@ protected:
 struct TypeExpr : Expr
 {
     virtual expr_id_t id() const override { return TYPE; };
+    virtual void add(Expr*) override;
 
     TypeExpr(const TypeExpr&);
     TypeExpr(TypeExpr&&);
     TypeExpr& operator=(const TypeExpr&);
     TypeExpr& operator=(TypeExpr&&);
 
+    TerminalExpr* get_name() const;
+
 protected:
     virtual TypeExpr* clone() const override { return new TypeExpr(*this); }
-
     TerminalExpr* name;
 };
 
@@ -245,15 +256,16 @@ protected:
 struct BlockExpr : Expr
 {
     virtual expr_id_t id() const override { return BLOCK; };
+    virtual void add(Expr*) override;
 
     BlockExpr(const BlockExpr&);
     BlockExpr(BlockExpr&&);
     BlockExpr& operator=(const BlockExpr&);
     BlockExpr& operator=(BlockExpr&&);
 
-    BlockExpr() = default;
+    BlockExpr(const Token* tok) : Expr(tok) {}
 
-    void operator<<(Expr*);
+    void add(Expr*);
 
 protected:
     virtual BlockExpr* clone() const override { return new BlockExpr(*this); }
@@ -265,6 +277,7 @@ protected:
 struct FlowControlExpr : Expr
 {
     virtual expr_id_t id() const override { return FLOW_CTRL; };
+    virtual void add(Expr*) override;
 
     FlowControlExpr(const FlowControlExpr&);
     FlowControlExpr(FlowControlExpr&&);
@@ -281,6 +294,7 @@ protected:
 struct LoopExpr : Expr
 {
     virtual expr_id_t id() const override { return LOOP; };
+    virtual void add(Expr*) override;
 
     LoopExpr(const LoopExpr&);
     LoopExpr(LoopExpr&&);
@@ -299,6 +313,7 @@ protected:
 struct IfElseExpr : Expr
 {
     virtual expr_id_t id() const override { return IF_ELSE; };
+    virtual void add(Expr*) override;
 
     IfElseExpr(const IfElseExpr&);
     IfElseExpr(IfElseExpr&&);
@@ -316,6 +331,7 @@ protected:
 struct FuncDeclExpr : Expr
 {
     virtual expr_id_t id() const override { return FUNCTION_DECLARATION; };
+    virtual void add(Expr*) override;
 
     FuncDeclExpr(const FuncDeclExpr&);
     FuncDeclExpr(FuncDeclExpr&&);
@@ -335,6 +351,7 @@ protected:
 struct VarDeclExpr : Expr
 {
     virtual expr_id_t id() const override { return VAR_DECLARATION; };
+    virtual void add(Expr*) override;
 
     VarDeclExpr(const VarDeclExpr&);
     VarDeclExpr(VarDeclExpr&&);
@@ -352,6 +369,7 @@ protected:
 struct MemberDeclExpr : Expr
 {
     virtual expr_id_t id() const override { return STRUCT_MEMBER; };
+    virtual void add(Expr*) override;
 
 protected:
     virtual MemberDeclExpr* clone() const override { return new MemberDeclExpr(*this); }
@@ -364,6 +382,7 @@ protected:
 struct StructDefExpr : Expr
 {
     virtual expr_id_t id() const override { return STRUCT_DEF; };
+    virtual void add(Expr*) override;
 
     StructDefExpr(const StructDefExpr&);
     StructDefExpr(StructDefExpr&&);
