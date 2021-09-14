@@ -35,7 +35,7 @@ struct Expr
 {
     virtual expr_id_t id() const { return EXPR; };
 
-    explicit Expr(struct Token*);
+    explicit Expr(Token*);
 
     virtual ~Expr();
     Expr(const Expr&);
@@ -45,11 +45,11 @@ struct Expr
 
     Expr() = delete;
 
-    struct Token* get_token() const { return token; }
+    Token* get_token() const { return token; }
 
 protected:
     virtual Expr* clone() const { return new Expr(*this); }
-    struct Token* token;
+    Token* token;
 };
 
 
@@ -63,7 +63,7 @@ protected:
     NonTerminalExpr(const NonTerminalExpr& other) : Expr(other) { };
     NonTerminalExpr(NonTerminalExpr&& other) : Expr(other) { };
 
-    NonTerminalExpr(struct Token* tok) : Expr(tok) { };
+    NonTerminalExpr(Token* tok) : Expr(tok) { };
 };
 
 
@@ -77,7 +77,7 @@ protected:
     TerminalExpr(const TerminalExpr& other) : NonTerminalExpr(other) { };
     TerminalExpr(TerminalExpr&& other) : NonTerminalExpr(other) { };
 
-    TerminalExpr(struct Token* tok) : NonTerminalExpr(tok) { };
+    TerminalExpr(Token* tok) : NonTerminalExpr(tok) { };
 };
 
 
@@ -91,7 +91,7 @@ struct BinaryExpr final : NonTerminalExpr
     BinaryExpr& operator=(const BinaryExpr&);
     BinaryExpr& operator=(BinaryExpr&&);
 
-    BinaryExpr(struct Token*, NonTerminalExpr* = nullptr, NonTerminalExpr* = nullptr);
+    BinaryExpr(Token*, NonTerminalExpr* = nullptr, NonTerminalExpr* = nullptr);
 
     NonTerminalExpr* get_left() const { return left; }
     NonTerminalExpr* get_right() const { return right; }
@@ -113,7 +113,7 @@ struct UnaryExpr final : NonTerminalExpr
     UnaryExpr& operator=(const UnaryExpr&);
     UnaryExpr& operator=(UnaryExpr&&);
 
-    UnaryExpr(struct Token*, NonTerminalExpr* = nullptr);
+    UnaryExpr(Token*, NonTerminalExpr* = nullptr);
 
     NonTerminalExpr* get_operand() const { return operand; }
 
@@ -133,7 +133,7 @@ struct ListExpr : NonTerminalExpr
     ListExpr& operator=(const ListExpr&);
     ListExpr& operator=(ListExpr&&);
 
-    ListExpr(struct Token*, ListExpr* = nullptr);
+    ListExpr(Token*, ListExpr* = nullptr);
 
     ListExpr* get_next() const { return next; }
 
@@ -169,7 +169,7 @@ struct ParamListExpr final : ListExpr
     ParamListExpr& operator=(const ParamListExpr&);
     ParamListExpr& operator=(ParamListExpr&&);
 
-    ParamListExpr(struct Token*, TypeExpr*, TerminalExpr* = nullptr, ParamListExpr* = nullptr);
+    ParamListExpr(Token*, TypeExpr*, TerminalExpr* = nullptr, ParamListExpr* = nullptr);
 
     TypeExpr* get_type() const { return type; }
     TerminalExpr* get_name() const { return name; }
@@ -191,7 +191,7 @@ struct PointerExpr final : NonTerminalExpr
     PointerExpr& operator=(const PointerExpr&);
     PointerExpr& operator=(PointerExpr&&);
 
-    PointerExpr(struct Token*, PointerExpr* = nullptr);
+    PointerExpr(Token*, PointerExpr* = nullptr);
 
 protected:
     virtual PointerExpr* clone() const override { return new PointerExpr(*this); }
@@ -209,8 +209,8 @@ struct DeclaratorExpr final : NonTerminalExpr
     DeclaratorExpr& operator=(const DeclaratorExpr&);
     DeclaratorExpr& operator=(DeclaratorExpr&&);
 
-    DeclaratorExpr(struct Token* tok, struct Token* = nullptr, struct Token* = nullptr, TerminalExpr* = nullptr, PointerExpr* = nullptr);
-    DeclaratorExpr(struct Token* tok, struct Token* = nullptr, struct Token* = nullptr, ListExpr* = nullptr, PointerExpr* = nullptr);
+    DeclaratorExpr(Token* tok, Token* = nullptr, Token* = nullptr, TerminalExpr* = nullptr, PointerExpr* = nullptr);
+    DeclaratorExpr(Token* tok, Token* = nullptr, Token* = nullptr, ListExpr* = nullptr, PointerExpr* = nullptr);
 
 protected:
     virtual DeclaratorExpr* clone() const override { return new DeclaratorExpr(*this); }
