@@ -22,10 +22,9 @@ enum token_id_t : unsigned char
 struct Token
 {
     virtual constexpr token_id_t id() const { return TOKEN; };
+    virtual Token* clone() const { return new Token(*this); }
 
     explicit Token(const std::string& str) : value(str) {}
-
-    virtual Token* clone() const { return new Token(*this); }
 
     const std::string value;
 };
@@ -110,3 +109,5 @@ struct StrLitToken final : LiteralToken
     virtual StrLitToken* clone() const { return new StrLitToken(*this); }
 };
 
+
+const Token& top_lvl_token_ref = Token("__TOP_LEVEL__");
