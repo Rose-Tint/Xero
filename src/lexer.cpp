@@ -1,4 +1,5 @@
 #include "../headers/Lexer.hpp"
+#include "consts.hpp"
 #include <cctype>
 
 
@@ -24,7 +25,7 @@ bool Lexer::is_potential_operator(std::string str) const
 }
 
 
-token_t Lexer::make_number()
+NumLitToken* Lexer::make_number()
 {
     char curr = code.peek();
     std::string num = "";
@@ -36,84 +37,60 @@ token_t Lexer::make_number()
         }
     }
 
-    return { TokenType::LITERAL, num };
+    return new NumLitToken(num);
 }
 
 
-token_t Lexer::make_identifier()
+IdentifierToken* Lexer::make_identifier()
 {
     char curr = code.peek();
     std::string id = "";
-    while ((is_identifier(curr)) && code.get(curr))
-    {
-        id += curr;
-    }
-
-    return { TokenType::IDENTIFIER, id };
+    while ((is_identifier(curr)) && code.get(curr)) id += curr;
+    return new IdentifierToken(id);
 }
 
 
-token_t Lexer::make_operator()
+OperatorToken* Lexer::make_operator()
 {
     char curr = code.peek();
     std::string op = {};
     do op += curr; while (code.get(curr) && is_potential_operator(op) && !(is_operator(op + (char)code.peek())));
     // if adding the next char coul make op an operator, add it to op, otherwise break
-    return { operators.at(op), op };
+    return new OperatorToken(op);
 }
 
 
-token_t Lexer::make_symbol()
+SymbolToken* Lexer::make_symbol()
 {
-    char sym = code.get();
-    return { symbols.at(sym), std::string(1, sym) };
+    return new SymbolToken(std::string(1, code.get()));
 }
 
 
-token_t Lexer::next_token()
+bool Lexer::next_token(Token* tok)
 {
     if (code)
     {
         char curr = code.peek();
         if (is_identifier(curr))
         {
-            return make_identifier();
+            tok = make_identifier();
         }
         else if (is_operator(std::string(1, curr)))
         {
-            return make_operator();
+            tok = make_operator();
         }
         else if (is_number_char(curr))
         {
-            return make_number();
+            tok = make_number();
         }
         else if (is_symbol(curr))
         {
-            return make_symbol();
+            tok = make_symbol();
         }
         else throw -2;
+        return true;
     }
-    else throw -3;
-}
-
-
-bool Lexer::next_token(token_t& tok)
-{
-    tok = next_token();
-    return (bool)code;
-}
-
-
-std::vector<token_t> Lexer::next_statement()
-{
-    char curr = code.peek();
-    token_t token = next_token();
-    std::vector<token_t> tokens { token };
-    while (token.type != ENDL && code.get(curr))
-    {
-        token = next_token();
-        tokens.push_back(token);
-    }
+    else return false;
 }
 
 

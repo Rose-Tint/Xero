@@ -1,16 +1,16 @@
-#include "lexer.hpp"
 #include "parser.hpp"
 
 
-expr_t parse(std::stringstream input)
+Parser::Parser(std::stringstream& input_code)
+    : lxr(input_code)
 {
-    Lexer lxr(input);
-    token_t token = lxr.next_token();
-    expr_t root(token);
-    while (lxr.next_token(token))
-    {
-        root.add(token);
-    }
-    return root;
+    *root = BlockExpr(&top_lvl_token_ref);
+    scp = Scope();
 }
 
+
+Expr* Parser::operator()()
+{
+    Token* token;
+    while (lxr.next_token(token));
+}

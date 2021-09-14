@@ -1,41 +1,83 @@
-statement         ::= expr+ ";"
+expr
+    | "(" expr ")"
+    | non-terminal
 
-block             ::= "{" statement* "}"
+un-op
+    | "@"
+    | "#"
+    | "++"
+    | "--"
+    | "!"
 
-type              ::= attr* (struct-name | primitive) ("@" | "#")?
+bin-op
+    | "+"
+    | "-"
+    | "*"
+    | "/"
+    | "%"
+    | "<"
+    | "<="
+    | "<="
+    | "<="
+    | "="
+    | "|"
+    | "&"
+    | "^"
+    | ","
 
-struct-decl       ::= "struct" name
+assign-op
+    | ":="
+    | "+="
+    | "-="
+    | "*="
+    | "/="
+    | "%="
+    | "|="
+    | "&="
+    | "^="
 
-var-decl          ::= type name
+un-expr
+    | un-op terminal
+    | un-op un-expr
+    | terminal un-op
+    | un-expr un-op
+    | un-op "(" non-terminal ")"
+    | un-op un-expr
+    | "(" non-terminal ")" un-op
+    | un-expr un-op
 
-arg               ::= var-name | literal | expr
+terminal
+    | IDENTIFIER
+    | LITERAL
 
-arg-list          ::= "(" arg* ")"
+non-terminal
+    | terminal
+    | non-terminal BINARY non-terminal
+    | non-terminal un-op
+    | un-op non-terminal
 
-param             ::= type name?
+param-list
+    | TYPE
+    | TYPE IDENTIFIER
+    | TYPE "," param-list
 
-param-decl-list   ::= "(" (param ":" arg ",")* ")"
+arg-list
+    | non-terminal
+    | non-terminal "," arg-list
 
-param-def-list    ::= "(" (var-decl ",")* ")"
+ptr
+    | "@"
+    | "@" ptr
 
-func-decl         ::= "fn" name param-decl-list type
+declarator
+    | direct-declr
+    | ptr direct-declr
 
-struct-def        ::= struct-decl "{" var-decl "}"
-
-func-def          ::= func-decl block
-
-struct-alias-def  ::= "alias" struct-decl ":" (name ",")+
-
-func-alias-def    ::= "alias" fn-name param-list type ":" (name ",")+
-
-assignment        ::= (var-decl | var-name) assignment-operator eval
-
-call              ::= func-name arg-list
-
-branch            ::= "if" "(" eval ")" block (("else" (branch | block)) | endl)
-
-for-loop          ::= "for" "(" statement ":" eval ":" statement ")" block
-
-over-loop         ::= "over" "(" var-decl ":" iterable ")" block
-
-while-loop        ::= "while" "(" eval ")" block
+direct-declr
+    | IDENTIFIER
+    | "(" declarator ")"
+    | direct-declr "[" NUMBER "]"
+    | direct-declr "[" "]"
+    | direct-declr "(" arg-list ")"
+    | direct-declr "(" param-list ")"
+    | direct-declr "(" ")"

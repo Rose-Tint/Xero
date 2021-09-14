@@ -27,7 +27,7 @@ class PreProcessor
     void define(std::ifstream&);
     void ifdef(std::ifstream&);
     void ifnotdef(std::ifstream&);
-    void then(std::ifstream&);
+    void then(std::ifstream&); // not a directive, but called by ifdef and ifnotdef
 
     public:
     PreProcessor() = default;
