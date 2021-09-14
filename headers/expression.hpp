@@ -35,31 +35,28 @@ enum expr_id_t : unsigned char
 struct Expr
 {
     virtual expr_id_t id() const { return EXPR; };
-    virtual void add(Expr*); // determines how to add an Expr* depending on both of the id() call
+    virtual void add(const Token*); // determines how to add an Expr* depending on both of the id() call
     virtual constexpr bool is_terminal() const = 0;
     virtual bool terminates() const = 0;
     virtual Expr* get_lowest_free() const = 0;
 
+    explicit Expr(const Token*);
     virtual ~Expr();
     Expr(const Expr&);
     Expr(Expr&&);
     Expr& operator=(const Expr&);
     Expr& operator=(Expr&&);
 
-    Token* get_token() const { return token; }
-
     protected:
     virtual Expr* clone() const { return new Expr(*this); }
-    explicit Expr(const Token*);
-    Expr();
-    Token* token;
+    Token* token = nullptr;
 };
 
 
 struct NonTerminalExpr : Expr
 {
     virtual expr_id_t id() const override { return NONTERMINAL; };
-    virtual void add(Expr*) = 0;
+    virtual void add(const Token*) = 0;
     virtual constexpr bool is_terminal() const override { return false; }
     virtual bool terminates() const = 0;
     virtual NonTerminalExpr* get_lowest_free() const = 0;
@@ -69,107 +66,124 @@ struct NonTerminalExpr : Expr
 
     NonTerminalExpr(const NonTerminalExpr& other) : Expr(other) { };
     NonTerminalExpr(NonTerminalExpr&& other) : Expr(other) { };
+    NonTerminalExpr& operator=(const NonTerminalExpr&);
+    NonTerminalExpr& operator=(NonTerminalExpr&&);
 
-    NonTerminalExpr(Token* tok) : Expr(tok) { };
+    explicit NonTerminalExpr(Token* tok) : Expr(tok) { };
 };
 
 
-struct TerminalExpr : NonTerminalExpr
+struct TerminalExpr final : virtual NonTerminalExpr
 {
     virtual expr_id_t id() const override { return TERMINAL; };
-    virtual void add(Expr*) = 0;
+    virtual void add(const Token*) = 0;
     virtual constexpr bool is_terminal() const final override { return true; }
     virtual bool terminates() const override;
     virtual NonTerminalExpr* get_lowest_free() const = 0;
 
-    TerminalExpr(Token* tok) : NonTerminalExpr(tok) { }
+    explicit TerminalExpr(Token* tok) : NonTerminalExpr(tok) { }
+    TerminalExpr(const TerminalExpr& other) : NonTerminalExpr(other) { };
+    TerminalExpr(TerminalExpr&& other) :  NonTerminalExpr(other) { };
+    TerminalExpr& operator=(const TerminalExpr&);
+    TerminalExpr& operator=(TerminalExpr&&);
 
     protected:
     virtual TerminalExpr* clone() const override { return new TerminalExpr(*this); }
 
-    TerminalExpr(const TerminalExpr& other) : NonTerminalExpr(other) { };
-    TerminalExpr(TerminalExpr&& other) : NonTerminalExpr(other) { };
 };
 
 
-struct BinaryExpr final : NonTerminalExpr
+struct BinaryExpr final : virtual NonTerminalExpr
 {
     virtual expr_id_t id() const override { return BINARY; };
-    virtual void add(Expr*) override;
+    virtual void add(const Token*) override;
     virtual bool terminates() const override;
     virtual NonTerminalExpr* get_lowest_free() const override;
 
+    explicit BinaryExpr(Token* tok) : NonTerminalExpr(tok) {}
     virtual ~BinaryExpr() override;
     BinaryExpr(const BinaryExpr&);
     BinaryExpr(BinaryExpr&&);
     BinaryExpr& operator=(const BinaryExpr&);
     BinaryExpr& operator=(BinaryExpr&&);
 
-    BinaryExpr(Token*, NonTerminalExpr* = nullptr, NonTerminalExpr* = nullptr);
-
-    NonTerminalExpr* get_left() const { return left; }
-    NonTerminalExpr* get_right() const { return right; }
 
     protected:
     virtual BinaryExpr* clone() const override { return new BinaryExpr(*this); }
-    NonTerminalExpr* left;
-    NonTerminalExpr* right;
+    NonTerminalExpr* left = nullptr;
+    NonTerminalExpr* right = nullptr;
 };
 
 
-struct UnaryExpr final : NonTerminalExpr
+struct UnaryExpr final : virtual NonTerminalExpr
 {
     virtual expr_id_t id() const override { return UNARY; };
-    virtual void add(Expr*) override;
+    virtual void add(const Token*) override;
     virtual bool terminates() const override;
     virtual NonTerminalExpr* get_lowest_free() const override;
 
+    explicit UnaryExpr(Token* tok) : NonTerminalExpr(tok) {}
     virtual ~UnaryExpr() override;
     UnaryExpr(const UnaryExpr&);
     UnaryExpr(UnaryExpr&&);
     UnaryExpr& operator=(const UnaryExpr&);
     UnaryExpr& operator=(UnaryExpr&&);
 
-    UnaryExpr(Token*, NonTerminalExpr* = nullptr);
-
-    NonTerminalExpr* get_operand() const { return operand; }
-
     protected:
     virtual UnaryExpr* clone() const override { return new UnaryExpr(*this); }
-    NonTerminalExpr* operand;
+    NonTerminalExpr* operand = nullptr;
 };
 
 
-struct ListExpr : NonTerminalExpr
+struct ListExpr : virtual NonTerminalExpr
 {
     virtual expr_id_t id() const override { return LIST; };
-    virtual void add(Expr*) = 0;
+    virtual void add(const Token*) = 0;
     virtual bool terminates() const = 0;
     virtual NonTerminalExpr* get_lowest_free() const override;
 
+    explicit ListExpr(Token* tok) : NonTerminalExpr(tok) {}
     virtual ~ListExpr() override;
     ListExpr(const ListExpr&);
     ListExpr(ListExpr&&);
     ListExpr& operator=(const ListExpr&);
     ListExpr& operator=(ListExpr&&);
 
-    ListExpr(Token*, ListExpr* = nullptr);
-
-    ListExpr* get_next() const { return next; }
-
     protected:
     virtual ListExpr* clone() const override { return new ListExpr(*this); }
-    ListExpr* next;
+    NonTerminalExpr* arg = nullptr;
+    ListExpr* next = nullptr;
 };
 
 
-struct TypeExpr : NonTerminalExpr
+struct PointerExpr final : virtual NonTerminalExpr
 {
-    virtual expr_id_t id() const override { return TYPE; };
-    virtual void add(Expr*) override;
+    virtual expr_id_t id() const override { return POINTER; };
+    virtual void add(const Token*) override;
     virtual bool terminates() const override;
     virtual NonTerminalExpr* get_lowest_free() const override;
 
+    explicit PointerExpr(Token* tok) : NonTerminalExpr(tok) {}
+    virtual ~PointerExpr() override;
+    PointerExpr(const PointerExpr&);
+    PointerExpr(PointerExpr&&);
+    PointerExpr& operator=(const PointerExpr&);
+    PointerExpr& operator=(PointerExpr&&);
+
+    protected:
+    virtual PointerExpr* clone() const override { return new PointerExpr(*this); }
+    PointerExpr* ptr = nullptr;
+};
+
+
+struct TypeExpr final : virtual NonTerminalExpr
+{
+    virtual expr_id_t id() const override { return TYPE; };
+    virtual void add(const Token*) override;
+    virtual bool terminates() const override;
+    virtual NonTerminalExpr* get_lowest_free() const override;
+
+    explicit TypeExpr(Token* tok) : NonTerminalExpr(tok) {}
     TypeExpr(const TypeExpr&);
     TypeExpr(TypeExpr&&);
     TypeExpr& operator=(const TypeExpr&);
@@ -177,81 +191,35 @@ struct TypeExpr : NonTerminalExpr
 
     protected:
     virtual TypeExpr* clone() const override { return new TypeExpr(*this); }
-    TerminalExpr* name;
+    TerminalExpr* name = nullptr;
+    PointerExpr* ptr = nullptr;
 };
 
 
-struct ParamListExpr final : ListExpr
-{
-    virtual expr_id_t id() const override { return PARAM_LIST; };
-    virtual void add(Expr*) override;
-    virtual bool terminates() const override;
-    virtual NonTerminalExpr* get_lowest_free() const override;
-
-    virtual ~ParamListExpr() override;
-    ParamListExpr(const ParamListExpr&);
-    ParamListExpr(ParamListExpr&&);
-    ParamListExpr& operator=(const ParamListExpr&);
-    ParamListExpr& operator=(ParamListExpr&&);
-
-    ParamListExpr(Token*, ParamListExpr* = nullptr, TypeExpr* = nullptr, TerminalExpr* = nullptr);
-
-    TypeExpr* get_type() const { return type; }
-    TerminalExpr* get_name() const { return name; }
-
-    protected:
-    virtual ParamListExpr* clone() const override { return new ParamListExpr(*this); }
-    TypeExpr* type;
-    TerminalExpr* name;
-};
-
-
-struct PointerExpr final : NonTerminalExpr
-{
-    virtual expr_id_t id() const override { return POINTER; };
-    virtual void add(Expr*) override;
-    virtual bool terminates() const override;
-    virtual NonTerminalExpr* get_lowest_free() const override;
-
-    virtual ~PointerExpr() override;
-    PointerExpr(const PointerExpr&);
-    PointerExpr(PointerExpr&&);
-    PointerExpr& operator=(const PointerExpr&);
-    PointerExpr& operator=(PointerExpr&&);
-
-    PointerExpr(Token*, PointerExpr* = nullptr);
-
-    protected:
-    virtual PointerExpr* clone() const override { return new PointerExpr(*this); }
-    PointerExpr* ptr;
-};
-
-
-struct DeclaratorExpr final : NonTerminalExpr
+struct DeclaratorExpr final : virtual NonTerminalExpr
 {
     virtual expr_id_t id() const override { return DECLARATOR; };
-    virtual void add(Expr*) override;
+    virtual void add(const Token*) override;
     virtual bool terminates() const override;
     virtual NonTerminalExpr* get_lowest_free() const override;
 
+    explicit DeclaratorExpr(Token* tok) : NonTerminalExpr(tok) {}
     virtual ~DeclaratorExpr() override;
     DeclaratorExpr(const DeclaratorExpr&);
     DeclaratorExpr(DeclaratorExpr&&);
     DeclaratorExpr& operator=(const DeclaratorExpr&);
     DeclaratorExpr& operator=(DeclaratorExpr&&);
 
-    DeclaratorExpr(Token* tok, Token* = nullptr, Token* = nullptr, TerminalExpr* = nullptr, PointerExpr* = nullptr);
-    DeclaratorExpr(Token* tok, Token* = nullptr, Token* = nullptr, ListExpr* = nullptr, PointerExpr* = nullptr);
-
     protected:
     virtual DeclaratorExpr* clone() const override { return new DeclaratorExpr(*this); }
+    TerminalExpr* name = nullptr;
+    DeclaratorExpr* declarator = nullptr;
     union
     {
-        TerminalExpr* const_arg;
-        ListExpr* arg_list;
-        ParamListExpr* param_list;
+        TerminalExpr* const_arg = nullptr;
+        ListExpr* list = nullptr;
     };
-    PointerExpr* ptr;
+    PointerExpr* ptr = nullptr;
     enum { EMPTY, CONSTARG, ARGLIST, PARAMLIST } arg_type;
     enum { BRACES, BRACKETS, PARENS, ANGLES } enclosure_type;
 };
@@ -260,16 +228,15 @@ struct DeclaratorExpr final : NonTerminalExpr
 struct StatementExpr : Expr
 {
     virtual expr_id_t id() const override { return STATEMENT; };
-    virtual void add(Expr*) override;
+    virtual void add(const Token*) override;
     virtual bool terminates() const override;
     virtual NonTerminalExpr* get_lowest_free() const override;
 
+    explicit StatementExpr(Token* tok) : Expr(tok) {}
     StatementExpr(const StatementExpr&);
     StatementExpr(StatementExpr&&);
     StatementExpr& operator=(const StatementExpr&);
     StatementExpr& operator=(StatementExpr&&);
-
-    StatementExpr(Token* tok, Expr*);
 
     protected:
     virtual StatementExpr* clone() const override { return new StatementExpr(*this); }
@@ -281,16 +248,15 @@ struct StatementExpr : Expr
 struct BlockExpr : Expr
 {
     virtual expr_id_t id() const override { return BLOCK; };
-    virtual void add(Expr*) override;
+    virtual void add(const Token*) override;
     virtual bool terminates() const override;
     virtual NonTerminalExpr* get_lowest_free() const override;
 
+    explicit BlockExpr(const Token* tok) : Expr(tok) {}
     BlockExpr(const BlockExpr&);
     BlockExpr(BlockExpr&&);
     BlockExpr& operator=(const BlockExpr&);
     BlockExpr& operator=(BlockExpr&&);
-
-    BlockExpr(const Token* tok) : Expr(tok) {}
 
     const std::vector<StatementExpr*>& get_exprs() const;
 
@@ -304,7 +270,7 @@ struct BlockExpr : Expr
 struct FlowControlExpr : Expr
 {
     virtual expr_id_t id() const override { return FLOW_CTRL; };
-    virtual void add(Expr*) override;
+    virtual void add(const Token*) override;
     virtual bool terminates() const override;
     virtual NonTerminalExpr* get_lowest_free() const override;
 
@@ -316,14 +282,14 @@ struct FlowControlExpr : Expr
     protected:
     virtual FlowControlExpr* clone() const override { return new FlowControlExpr(*this); }
 
-    BlockExpr* body;
+    BlockExpr* body = nullptr;
 };
 
 
 struct LoopExpr : FlowControlExpr
 {
     virtual expr_id_t id() const override { return LOOP; };
-    virtual void add(Expr*) override;
+    virtual void add(const Token*) override;
     virtual bool terminates() const override;
     virtual NonTerminalExpr* get_lowest_free() const override;
 
@@ -335,16 +301,16 @@ struct LoopExpr : FlowControlExpr
     protected:
     virtual LoopExpr* clone() const override { return new LoopExpr(*this); }
 
-    NonTerminalExpr* before;
-    NonTerminalExpr* condition;
-    NonTerminalExpr* each;
+    NonTerminalExpr* before = nullptr;
+    NonTerminalExpr* condition = nullptr;
+    NonTerminalExpr* each = nullptr;
 };
 
 
 struct IfElseExpr : FlowControlExpr
 {
     virtual expr_id_t id() const override { return IF_ELSE; };
-    virtual void add(Expr*) override;
+    virtual void add(const Token*) override;
     virtual bool terminates() const override;
     virtual NonTerminalExpr* get_lowest_free() const override;
 
@@ -356,16 +322,16 @@ struct IfElseExpr : FlowControlExpr
     protected:
     virtual IfElseExpr* clone() const override { return new IfElseExpr(*this); }
 
-    Expr* condition;
-    bool has_else;
-    Expr* else_body;
+    Expr* condition = nullptr;
+    bool has_else = nullptr;
+    Expr* else_body = nullptr;
 };
 
 
 struct FuncDeclExpr : StatementExpr
 {
     virtual expr_id_t id() const override { return FUNCTION_DECLARATION; };
-    virtual void add(Expr*) override;
+    virtual void add(const Token*) override;
     virtual bool terminates() const override;
     virtual NonTerminalExpr* get_lowest_free() const override;
 
@@ -379,15 +345,15 @@ struct FuncDeclExpr : StatementExpr
     protected:
     virtual FuncDeclExpr* clone() const override { return new FuncDeclExpr(*this); }
 
-    DeclaratorExpr* declarator;
-    TypeExpr* return_type;
+    DeclaratorExpr* declarator = nullptr;
+    TypeExpr* return_type = nullptr;
 };
 
 
-struct VarDeclExpr : StatementExpr
+struct VarDeclExpr : NonTerminalExpr
 {
     virtual expr_id_t id() const override { return VAR_DECLARATION; };
-    virtual void add(Expr*) override;
+    virtual void add(const Token*) override;
     virtual bool terminates() const override;
     virtual NonTerminalExpr* get_lowest_free() const override;
 
@@ -399,30 +365,29 @@ struct VarDeclExpr : StatementExpr
     protected:
     virtual VarDeclExpr* clone() const override { return new VarDeclExpr(*this); }
 
-    TypeExpr* type;
-    DeclaratorExpr* declarator;
+    TypeExpr* type = nullptr;
+    DeclaratorExpr* declarator = nullptr;
 };
 
 
 struct MemberDeclExpr : StatementExpr
 {
     virtual expr_id_t id() const override { return STRUCT_MEMBER; };
-    virtual void add(Expr*) override;
+    virtual void add(const Token*) override;
     virtual bool terminates() const override;
     virtual NonTerminalExpr* get_lowest_free() const override;
 
     protected:
     virtual MemberDeclExpr* clone() const override { return new MemberDeclExpr(*this); }
 
-    bool _private;
-    VarDeclExpr* var;
+    VarDeclExpr* var = nullptr;
 };
 
 
 struct StructDefExpr : Expr
 {
     virtual expr_id_t id() const override { return STRUCT_DEF; };
-    virtual void add(Expr*) override;
+    virtual void add(const Token*) override;
     virtual bool terminates() const override;
     virtual NonTerminalExpr* get_lowest_free() const override;
 
@@ -434,7 +399,7 @@ struct StructDefExpr : Expr
     protected:
     virtual StructDefExpr* clone() const override { return new StructDefExpr(*this); }
 
-    TypeExpr* type;
+    TypeExpr* type = nullptr;
     std::vector<std::shared_ptr<MemberDeclExpr>> members;
 };
 

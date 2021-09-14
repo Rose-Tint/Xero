@@ -1,197 +1,6 @@
 #include "expression.hpp"
 
 
-// NORMAL CONSTRUCTORS
-
-
-Expr::Expr(const Token* tok)
-    : token(tok->clone())
-{
-    ;
-}
-
-
-BinaryExpr::BinaryExpr(Token* tok, NonTerminalExpr* l, NonTerminalExpr* r)
-    : NonTerminalExpr(tok->clone())
-{
-    left = (l != nullptr) ? l : nullptr;
-    right = (r != nullptr) ? r : nullptr;
-}
-
-UnaryExpr::UnaryExpr(Token* tok, NonTerminalExpr* _operand)
-    : NonTerminalExpr(tok->clone())
-{
-    operand = (_operand != nullptr) ? _operand : nullptr;
-}
-
-ListExpr::ListExpr(Token* tok, ListExpr* _next)
-    : NonTerminalExpr(tok->clone())
-{
-    next = (_next != nullptr) ? _next : nullptr;
-}
-
-
-ParamListExpr::ParamListExpr(Token* tok, ParamListExpr* params, TypeExpr* _type, TerminalExpr* _name)
-    : ListExpr(tok, params)
-{
-    type = _type;
-    name = (_name != nullptr) ? _name : nullptr;
-}
-
-
-PointerExpr::PointerExpr(struct Token* tok, PointerExpr* _ptr)
-    : NonTerminalExpr(tok)
-{
-    ptr = (_ptr != nullptr) ? _ptr : nullptr;
-}
-
-
-DeclaratorExpr::DeclaratorExpr(struct Token* tok, struct Token* _name, struct Token* enc_sym, TerminalExpr* arg, PointerExpr* _ptr)
-    : NonTerminalExpr(tok)
-{
-    const_arg = (arg != nullptr) ? arg : nullptr;
-    ptr = (_ptr != nullptr) ? _ptr : nullptr;
-}
-
-
-DeclaratorExpr::DeclaratorExpr(struct Token* tok, struct Token* _name, struct Token* enc_sym, ListExpr* args, PointerExpr* _ptr)
-    : NonTerminalExpr(tok)
-{
-    if (dynamic_cast<ParamListExpr*>(args)) param_list = (args != nullptr) ? dynamic_cast<ParamListExpr*>(args) : nullptr;
-    else arg_list = (args != nullptr) ? args : nullptr;
-
-    switch (enc_sym->value[0])
-    {
-        case ('{'): enclosure_type = BRACES;   break;
-        case ('('): enclosure_type = PARENS;   break;
-        case ('<'): enclosure_type = ANGLES;   break;
-        case ('['): enclosure_type = BRACKETS; break;
-    }
-}
-
-
-// VIRTUAL ADD
-
-
-void BinaryExpr::add(Expr* expr)
-{
-    auto non_terminal = dynamic_cast<NonTerminalExpr*>(expr);
-    if (non_terminal)
-    {
-        if (left == nullptr)
-        {
-            left = non_terminal->clone();
-            return;
-        }
-        else if (!(left->terminates()))
-        {
-            left->add(expr);
-            return;
-        }
-        else if (right == nullptr)
-        {
-            right = non_terminal->clone();
-            return;
-        }
-        else if (!(right->terminates()))
-        {
-            left->add(expr);
-            return;
-        }
-    }
-    delete expr;
-    throw -2;
-}
-
-void UnaryExpr::add(Expr* expr)
-{
-    auto non_terminal = dynamic_cast<NonTerminalExpr*>(expr);
-    if (non_terminal)
-    {
-        if (operand == nullptr)
-        {
-            operand = non_terminal->clone();
-            return;
-        }
-        else if (!(operand->terminates()))
-        {
-            operand->add(expr);
-            return;
-        }
-    }
-    delete expr;
-    throw -2;
-}
-
-void TypeExpr::add(Expr* expr)
-{
-    auto terminal = dynamic_cast<TerminalExpr*>(expr);
-    if (terminal && name == nullptr)
-    {
-        name = terminal->clone();
-        return;
-    }
-    delete expr;
-    throw -2;
-}
-
-void ParamListExpr::add(Expr* expr)
-{
-    auto _type = dynamic_cast<TypeExpr*>(expr);
-    auto _name = dynamic_cast<TerminalExpr*>(expr);
-    if (_type)
-    {
-        if (type == nullptr)
-        {
-            type = _type->clone();
-            return;
-        }
-        else if (!(type->terminates()))
-        {
-            type->add(expr);
-            return;
-        }
-    }
-    if (_name)
-    {
-        if (name == nullptr)
-        {
-            name = _name->clone();
-            return;
-        }
-        else if (!(name->terminates()))
-        {
-            name->add(expr);
-            return;
-        }
-    }
-    delete expr;
-    throw -2;
-}
-
-void PointerExpr::add(Expr* expr)
-{
-    auto _ptr = dynamic_cast<PointerExpr*>(expr);
-    if (_ptr)
-    {
-        if (ptr == nullptr)
-        {
-            ptr = _ptr->clone();
-            return;
-        }
-        else if (!(ptr->terminates()))
-        {
-            ptr->add(expr);
-            return
-        }
-    }
-    delete expr;
-    throw -2;
-}
-
-// TODO: DeclaratorExpr AND ON
-
-
 // RULE OF 5s
 // DESTRUCTORS, COPY CTRS, COPY ASSIGNMENT OPS, MOVE CTRS, COPY ASSIGNMENT OPS
 
@@ -199,7 +8,7 @@ void PointerExpr::add(Expr* expr)
 Expr::Expr(const Expr& other)
 {
     delete token;
-    token = (other.token != nullptr) ? other.token : nullptr;
+    token = (other.token != nullptr) ? other.token->clone() : nullptr;
 }
 
 Expr::Expr(Expr&& other)
@@ -214,7 +23,7 @@ Expr& Expr::operator=(const Expr& other)
 {
     if (this == &other) return *this;
     delete token;
-    token = (other.token != nullptr) ? other.token : nullptr;
+    token = (other.token != nullptr) ? other.token->clone() : nullptr;
     return *this;
 }
 
@@ -231,8 +40,8 @@ BinaryExpr::BinaryExpr(const BinaryExpr& other) : NonTerminalExpr(other)
     delete left;
     delete right;
 
-    left = (other.left != nullptr) ? other.left : nullptr;
-    right = (other.right != nullptr) ? other.right : nullptr;
+    left = (other.left != nullptr) ? other.left->clone() : nullptr;
+    right = (other.right != nullptr) ? other.right->clone() : nullptr;
 }
 
 BinaryExpr::BinaryExpr(BinaryExpr&& other) : NonTerminalExpr(other)
@@ -252,9 +61,9 @@ BinaryExpr& BinaryExpr::operator=(const BinaryExpr& other)
     delete left;
     delete right;
 
-    token = (other.token != nullptr) ? other.token : nullptr;
-    left = (other.left != nullptr) ? other.left : nullptr;
-    right = (other.right != nullptr) ? other.right : nullptr;
+    token = (other.token != nullptr) ? other.token->clone() : nullptr;
+    left = (other.left != nullptr) ? other.left->clone() : nullptr;
+    right = (other.right != nullptr) ? other.right->clone() : nullptr;
 
     return *this;
 }
@@ -278,7 +87,7 @@ UnaryExpr::UnaryExpr(const UnaryExpr& other) : NonTerminalExpr(other)
 {
     delete operand;
 
-    operand = (other.operand != nullptr) ? other.operand : nullptr;
+    operand = (other.operand != nullptr) ? other.operand->clone() : nullptr;
 }
 
 UnaryExpr::UnaryExpr(UnaryExpr&& other) : NonTerminalExpr(other)
@@ -297,8 +106,8 @@ UnaryExpr& UnaryExpr::operator=(const UnaryExpr& other)
     delete operand;
     delete token;
 
-    token = (other.token != nullptr) ? other.token : nullptr;
-    operand = (other.operand != nullptr) ? other.operand : nullptr;
+    token = (other.token != nullptr) ? other.token->clone() : nullptr;
+    operand = (other.operand != nullptr) ? other.operand->clone() : nullptr;
 
     return *this;
 }
@@ -319,7 +128,7 @@ UnaryExpr& UnaryExpr::operator=(UnaryExpr&& other)
 ListExpr::ListExpr(const ListExpr& other) : NonTerminalExpr(other)
 {
     delete next;
-    next = (other.next != nullptr) ? other.next : nullptr;
+    next = (other.next != nullptr) ? other.next->clone() : nullptr;
 }
 
 ListExpr::ListExpr(ListExpr&& other) : NonTerminalExpr(other)
@@ -337,8 +146,8 @@ ListExpr& ListExpr::operator=(const ListExpr& other)
     delete token;
     delete next;
 
-    token = (other.token != nullptr) ? other.token : nullptr;
-    next = (other.next != nullptr) ? other.next : nullptr;
+    token = (other.token != nullptr) ? other.token->clone() : nullptr;
+    next = (other.next != nullptr) ? other.next->clone() : nullptr;
     return *this;
 }
 
@@ -360,8 +169,8 @@ ParamListExpr::ParamListExpr(const ParamListExpr& other) : ListExpr(other)
     delete name;
     delete type;
 
-    name = (other.name != nullptr) ? other.name : nullptr;
-    type = (other.type != nullptr) ? other.type : nullptr;
+    name = (other.name != nullptr) ? other.name->clone() : nullptr;
+    type = (other.type != nullptr) ? other.type->clone() : nullptr;
 }
 
 ParamListExpr::ParamListExpr(ParamListExpr&& other) : ListExpr(other)
@@ -383,9 +192,9 @@ ParamListExpr& ParamListExpr::operator=(const ParamListExpr& other)
     delete type;
     delete name;
 
-    token = (other.token != nullptr) ? other.token : nullptr;
-    name = (other.name != nullptr) ? other.name : nullptr;
-    type = (other.type != nullptr) ? other.type : nullptr;
+    token = (other.token != nullptr) ? other.token->clone() : nullptr;
+    name = (other.name != nullptr) ? other.name->clone() : nullptr;
+    type = (other.type != nullptr) ? other.type->clone() : nullptr;
 
     return *this;
 }
@@ -408,7 +217,7 @@ ParamListExpr& ParamListExpr::operator=(ParamListExpr&& other)
 PointerExpr::PointerExpr(const PointerExpr& other) : NonTerminalExpr(other)
 {
     delete ptr;
-    ptr = (other.ptr != nullptr) ? other.ptr : nullptr;
+    ptr = (other.ptr != nullptr) ? other.ptr->clone() : nullptr;
 }
 
 PointerExpr::PointerExpr(PointerExpr&& other) : NonTerminalExpr(other)
@@ -426,8 +235,8 @@ PointerExpr& PointerExpr::operator=(const PointerExpr& other)
     delete token;
     delete ptr;
 
-    token = (other.token != nullptr) ? other.token : nullptr;
-    ptr = (other.ptr != nullptr) ? other.ptr : nullptr;
+    token = (other.token != nullptr) ? other.token->clone() : nullptr;
+    ptr = (other.ptr != nullptr) ? other.ptr->clone() : nullptr;
 
     return *this;
 }
@@ -452,20 +261,20 @@ DeclaratorExpr::DeclaratorExpr(const DeclaratorExpr& other) : NonTerminalExpr(ot
     delete const_arg;
     delete param_list;
 
-    ptr = (other.ptr != nullptr) ? other.ptr : nullptr;
+    ptr = (other.ptr != nullptr) ? other.ptr->clone() : nullptr;
     arg_type = other.arg_type;
     enclosure_type = other.enclosure_type;
 
     switch (arg_type)
     {
         case (CONSTARG):
-            const_arg = (other.const_arg != nullptr) ? other.const_arg : nullptr;
+            const_arg = (other.const_arg != nullptr) ? other.const_arg->clone() : nullptr;
             break;
         case (ARGLIST):
-            arg_list = (other.arg_list != nullptr) ? other.arg_list : nullptr;
+            arg_list = (other.arg_list != nullptr) ? other.arg_list->clone() : nullptr;
             break;
         case (PARAMLIST):
-            param_list = (other.param_list != nullptr) ? other.param_list : nullptr;
+            param_list = (other.param_list != nullptr) ? other.param_list->clone() : nullptr;
             break;
     }
 }
@@ -512,21 +321,21 @@ DeclaratorExpr& DeclaratorExpr::operator=(const DeclaratorExpr& other)
     delete const_arg;
     delete param_list;
 
-    token = (other.token != nullptr) ? other.token : nullptr;
-    ptr = (other.ptr != nullptr) ? other.ptr : nullptr;
+    token = (other.token != nullptr) ? other.token->clone() : nullptr;
+    ptr = (other.ptr != nullptr) ? other.ptr->clone() : nullptr;
     arg_type = other.arg_type;
     enclosure_type = other.enclosure_type;
 
     switch (arg_type)
     {
         case (CONSTARG):
-            const_arg = (other.const_arg != nullptr) ? other.const_arg : nullptr;
+            const_arg = (other.const_arg != nullptr) ? other.const_arg->clone() : nullptr;
             break;
         case (ARGLIST):
-            arg_list = (other.arg_list != nullptr) ? other.arg_list : nullptr;
+            arg_list = (other.arg_list != nullptr) ? other.arg_list->clone() : nullptr;
             break;
         case (PARAMLIST):
-            param_list = (other.param_list != nullptr) ? other.param_list : nullptr;
+            param_list = (other.param_list != nullptr) ? other.param_list->clone() : nullptr;
             break;
     }
 

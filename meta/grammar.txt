@@ -69,14 +69,9 @@ ptr
     | "@"
     | "@" ptr
 
-declarator
-    | direct-declr
-    | ptr direct-declr
-
 direct-declr
     | IDENTIFIER
-    | "(" declarator ")"
-    | direct-declr "[" NUMBER "]"
+    | direct-declr "[" terminal "]"
     | direct-declr "[" "]"
     | direct-declr "(" arg-list ")"
     | direct-declr "(" param-list ")"

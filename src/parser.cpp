@@ -30,47 +30,6 @@ Expr* Parser::operator()()
     while (lxr.next_token(token))
     {
         lowest_nt = root->get_lowest_free();
-        switch (token->id())
-        {
-            case (IDENTIFIER):
-                expr = new TerminalExpr(token);
-                lowest_nt->add(expr);
-                delete expr;
-                break;
-
-            case (KEYWORD):
-                expr = new TerminalExpr(token);
-                lowest_nt->add(expr);
-                delete expr;
-                break;
-
-            case (BINARY_OP):
-                expr = new BinaryExpr(token);
-                lowest_nt->add(expr);
-                delete expr;
-                break;
-
-            case (UNARY_OP):
-                expr = new UnaryExpr(token);
-                lowest_nt->add(expr);
-                delete expr;
-                break;
-
-            case (NUMBER):
-                expr = new TerminalExpr(token);
-                lowest_nt->add(expr);
-                delete expr;
-                break;
-
-            case (STR_LIT):
-                expr = new TerminalExpr(token);
-                lowest_nt->add(expr);
-                delete expr;
-                break;
-
-            case (SYMBOL):
-                // TODO
-                break;
-        }
+        lowest_nt->add(token);
     }
 }
