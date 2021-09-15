@@ -1,30 +1,15 @@
 #include "scope.hpp"
 
 
-Scope& Scope::operator<<(FuncDeclExpr* func)
+void Scope::add(string id, string value)
 {
-    functions.insert(func->get_signature());
-    return *this;
+    names.insert({ id, value }, level);
 }
 
 
-Scope& Scope::operator<<(TypeExpr* type)
+void Scope::operator--(int)
 {
-    names.insert({ type->get_name()->get_token()->value, level });
-    return *this;
-}
-
-
-Scope& Scope::operator<<(TerminalExpr* identifier)
-{
-    names.insert({ identifier->get_token()->value, level });
-    return *this;
-}
-
-
-void Scope::level_down()
-{
-    for (auto pair : names) if (pair.second == level) names.erase(pair.first);
-    level -= 1;
+    for (auto var : names) if (var.second == level) names.erase(var.first);
+    level--;
 }
 

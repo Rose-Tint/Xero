@@ -1,14 +1,11 @@
 #include "preprocessor.hpp"
 
 
-typedef std::unordered_set<std::string> str_set;
-
-
 void PreProcessor::process(std::string fname)
 {
     bool should_process = false;
-    std::ifstream file(fname);
-    char c = 0;
+    std::fstream file(fname);
+    char c;
     while (file.get(c))
     {
         if (should_process)
@@ -117,6 +114,6 @@ void PreProcessor::then(std::ifstream& file)
                 direct(file);
             }
         }
-        code.put(c);
+        else code.put(c);
     }
 }

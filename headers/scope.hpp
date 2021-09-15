@@ -1,30 +1,27 @@
 #pragma once
 
-#include <unordered_map>
-#include <unordered_set>
+#include <map>
+#include <pair>
 #include <string>
-#include <cstdint>
 
 #include "token.hpp"
 #include "expression.hpp"
 
 
-typedef unsigned char level_t;
+typedef char level_t;
 
 
 class Scope
 {
+    using std::pair, std::map, std::string;
+    protected:
     level_t level = 0;
-    std::unordered_set<std::uint16_t> functions;
-    std::unordered_map<std::string, level_t> names;
+    map<string, string, level_t> names;
 
-public:
-    Scope& operator<<(FuncDeclExpr*); // adds a function to the scope
-    Scope& operator<<(TypeExpr*);
-    Scope& operator<<(TerminalExpr*);
-    void level_up() { level++; }
-    void level_down();
-    bool contains(Token*) const;
-    bool contains(TypeExpr*) const;
-    bool contains(FuncDeclExpr*) const;
+    public:
+    Scope() = default;
+    void add(string, string);
+    void operator++(int) { level++; }
+    void operator--(int);
+    std::string operator[](std::string key) { return names }
 };
