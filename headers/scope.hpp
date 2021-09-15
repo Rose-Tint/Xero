@@ -23,5 +23,5 @@ class Scope
     void add(string, string);
     void operator++(int) { level++; }
     void operator--(int);
-    std::string operator[](std::string key) { return names }
+    std::string operator[](std::string key) { return names[key]; }
 };
