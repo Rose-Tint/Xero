@@ -40,7 +40,6 @@ class Expr
     static Expr* unary(Token);
 
     void add(Expr*);
-    void add(Expr&);
     bool terminates() const;
     std::string get_value() const { return value; }
 };

@@ -13,7 +13,7 @@ class Parser
 {
     Lexer lxr;
     Scope scp;
-    Expr root = Expr(ENTRY);
+    Expr* root = new Expr(ENTRY);
 
     Expr* scope();
     Expr* assign();
@@ -29,7 +29,7 @@ class Parser
 
     public:
     Parser(std::stringstream& input) : lxr(input), scp() { }
-    Expr operator()();
+    Expr* operator()();
 };
 
 #endif

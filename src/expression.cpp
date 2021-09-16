@@ -127,17 +127,6 @@ void Expr::add(Expr* expr)
 }
 
 
-void Expr::add(Expr& expr)
-{
-    if (terminates()) throw err::SyntaxError(std::string("expression terminates, but was told to add an expr"));
-    if (left == nullptr) left = new Expr(expr);
-    else if (!left->terminates()) left->add(&expr);
-    else if (right == nullptr) right = new Expr(expr);
-    else if (!right->terminates() && right->token != EMPTY) right->add(&expr);
-    else throw err::SyntaxError(std::string("reached end of Expr::add"));
-}
-
-
 bool Expr::terminates() const
 {
     if (token == ID || token == NUM) return true;

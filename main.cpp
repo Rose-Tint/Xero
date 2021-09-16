@@ -27,6 +27,7 @@ int main(int argc, char** argv)
         Parser psr(code);
         auto expr_tree = psr();
         std::cout << expr_tree << std::endl;
+        delete expr_tree;
     }
     catch (err::ParserError e)
     {
