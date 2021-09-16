@@ -1,4 +1,5 @@
-#pragma once
+#ifndef TOKEN_HPP
+#define TOKEN_HPP
 
 #include <string>
 
@@ -8,7 +9,6 @@ enum Token : char
     EXIT     =  0 ,
     ENTRY    = -1 ,
     NUM      = -2 ,
-    STR      = -3 ,
     ID       = -4 ,
     EMPTY    = -5,
     LPAREN   = '(',
@@ -25,10 +25,12 @@ enum Token : char
     MOD      = '%',
     DIV      = '/',
     MUL      = '*',
-    ADD      = '+',
-    SUB      = '-',
+    PLUS     = '+',
+    MINUS    = '-',
     ASN      = ':',
     LBRACE   = '{',
     RBRACE   = '}',
     ENDL     = ';',
 };
+
+#endif

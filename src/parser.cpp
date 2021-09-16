@@ -1,18 +1,13 @@
 #include "parser.hpp"
 
 
-Parser::Parser(std::stringstream& input_code)
-    : lxr(input_code), scp()
-{
-    ;
-}
-
-
 Expr Parser::scope()
 {
+    Expr expr(LBRACE);
     scp++;
-    assign();
+    while (lxr.get() != RBRACE) expr.add(assign());
     scp--;
+    return expr;
 }
 
 
@@ -23,12 +18,12 @@ Expr Parser::assign()
     if (lxr.get() == ASN)
     {
         expr.add(Expr(ASN));
-        if (tok != ID) throw 0;
-        std::string id = lxr.buffer;
+        if (tok != ID) throw 2;
+        std::string id = lxr.get_val();
         expr.add(Expr(ID, id));
         lxr.next();
         expr.add(add());
-        scp.add(id, lxr.buffer);
+        scp.add(id, lxr.get_val());
     }
     return expr;
 }
@@ -91,7 +86,8 @@ Expr Parser::cmp()
                 lxr.next();
                 expr.add(eq());
                 break;
-            default return;
+            default:
+                return expr;
         }
     }
 }
@@ -99,7 +95,7 @@ Expr Parser::cmp()
 
 Expr Parser::eq()
 {
-    Expr expr = xor();
+    Expr expr = _xor();
     while (1)
     {
         Token token = lxr.get();
@@ -107,16 +103,16 @@ Expr Parser::eq()
         {
             expr.add(Expr(token));
             lxr.next();
-            expr.add(xor());
+            expr.add(_xor());
         }
         else return expr;
     }
 }
 
 
-Expr Parser::xor()
+Expr Parser::_xor()
 {
-    Expr expr = or();
+    Expr expr = _or();
     while (1)
     {
         Token token = lxr.get();
@@ -124,16 +120,16 @@ Expr Parser::xor()
         {
             expr.add(Expr(token));
             lxr.next();
-            expr.add(or());
+            expr.add(_or());
         }
         else return expr;
     }
 }
 
 
-Expr Parser::or()
+Expr Parser::_or()
 {
-    Expr expr = and();
+    Expr expr = _and();
     while (1)
     {
         Token token = lxr.get();
@@ -141,14 +137,14 @@ Expr Parser::or()
         {
             expr.add(Expr(token));
             lxr.next();
-            expr.add(and());
+            expr.add(_and());
         }
         else return expr;
     }
 }
 
 
-Expr Parser::and()
+Expr Parser::_and()
 {
     Expr expr = unary();
     while (1)
@@ -175,12 +171,12 @@ Expr Parser::unary()
         {
             case (PLUS):
             case (MINUS):
-            case (NOT):
+            case (NOT):{
                 Expr unary = Expr::unary(token);
                 lxr.next();
                 unary.add(terminal());
                 expr.add(unary);
-                break;
+            } break;
             default:
                 return expr;
         }
@@ -190,31 +186,37 @@ Expr Parser::unary()
 
 Expr Parser::terminal()
 {
-    std::string sval = lxr.buffer;
+    std::string arg_s = lxr.get_val();
     Expr expr;
-    switch (lxr.get())
+    Token token = lxr.get();
+    lxr.next();
+    switch (token)
     {
-        case NUM:
-            lxr.next();
-            scp[sval];
-            break;
         case ID:
-            lxr.next();
+            expr = Expr(token, scp[arg_s].value);
+            break;
+        case NUM:
+            expr = Expr(token, arg_s);
             break;
         case LPAREN:
-            lxr.next();
-            add();
-            if (lxr.get() != RPAREN) throw 1;
+            expr = add();
+            if (token != RPAREN) throw 2;
             break;
-        case LBRACE:
-            lxr.next();
-            scope();
-            if (lxr.get != RBRACE) throw 2;
-            break;
+        /*case LBRACE:
+            expr = scope();
+            if (lxr.get() != RBRACE) throw 2;
+            break;*/ // i dont THINK this is right
         case ENDL:
-            lxr.next()
-            assign();
+            expr = assign();
             break;
-        default: throw 3;
+        default:
+            throw 2;
     }
+    return expr;
+}
+
+
+Expr Parser::operator()()
+{
+    return root;
 }

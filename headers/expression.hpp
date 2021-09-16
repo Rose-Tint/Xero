@@ -1,7 +1,8 @@
-#pragma once
+#ifndef EXPRESSION_HPP
+#define EXPRESSION_HPP
 
 #include <memory>
-#include <vector>
+#include <iostream>
 #include <cstddef>
 #include <string>
 
@@ -10,25 +11,37 @@
 
 class Expr
 {
+    friend std::ostream& operator<<(std::ostream&, Expr&);
+    static bool entrance_made;
     Token token;
     std::string value;
     Expr* left = nullptr;
     Expr* right = nullptr;
 
+    inline void mov(Expr&&);
+    inline void cpy(const Expr&);
+
+    unsigned int depth() const;
+
     public:
+    Expr() : token(EMPTY) { }
     explicit Expr(Token);
-    Expr(Token, std::string);
-    Expr(Token, char);
+    explicit Expr(Token, std::string);
+    explicit Expr(Token, char);
+
     Expr& operator=(Expr&&);
+    Expr& operator=(const Expr&);
+
+    Expr(Expr&& other) { mov(std::move(other)); }
+    Expr(const Expr& other) { cpy(other); }
+
     ~Expr() { delete left; delete right; }
 
     static Expr unary(Token);
 
-    Expr(const Expr&) = delete;
-    Expr& operator=(const Expr&) = delete;
-    Expr(Expr&&) = delete;
-
-    void add(Token, std::string);
+    void add(Expr&);
     void add(Expr&&);
     bool terminates() const;
 };
+
+#endif

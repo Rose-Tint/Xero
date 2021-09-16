@@ -1,11 +1,10 @@
-#pragma once
+#ifndef SCOPE_HPP
+#define SCOPE_HPP
 
 #include <map>
-#include <pair>
 #include <string>
 
 #include "token.hpp"
-#include "expression.hpp"
 
 
 typedef char level_t;
@@ -13,15 +12,25 @@ typedef char level_t;
 
 class Scope
 {
-    using std::pair, std::map, std::string;
-    protected:
+    struct ValueHolder
+    {
+        friend class Scope;
+        std::string value;
+        std::string& operator=(const std::string& val) { return value = val; }
+
+        private:
+        level_t level;
+    };
+
     level_t level = 0;
-    map<string, string, level_t> names;
+    std::map<std::string, ValueHolder> names;
 
     public:
     Scope() = default;
-    void add(string, string);
+    void add(std::string id, std::string value) { names.insert(id, { value, level }); }
     void operator++(int) { level++; }
     void operator--(int);
-    std::string operator[](std::string key) { return names[key]; }
+    ValueHolder& operator[](const std::string& key) { return names[key]; }
 };
+
+#endif

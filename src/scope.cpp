@@ -1,15 +1,10 @@
 #include "scope.hpp"
 
 
-void Scope::add(string id, string value)
-{
-    names.insert({ id, value }, level);
-}
-
-
 void Scope::operator--(int)
 {
-    for (auto var : names) if (var.second == level) names.erase(var.first);
+    decltype(names) replacement = names;
+    for (auto var : names) if (var.second.level == level) replacement.erase(var.first);
+    names = std::move(replacement);
     level--;
 }
-

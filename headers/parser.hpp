@@ -1,4 +1,5 @@
-#pragma once
+#ifndef PARSER_HPP
+#define PARSER_HPP
 
 #include <sstream>
 
@@ -12,7 +13,7 @@ class Parser
 {
     Lexer lxr;
     Scope scp;
-    Expr root;
+    Expr root = Expr(ENTRY);
 
     Expr scope();
     Expr assign();
@@ -20,13 +21,15 @@ class Parser
     Expr mul();
     Expr cmp();
     Expr eq();
-    Expr xor();
-    Expr or();
-    Expr and();
+    Expr _xor();
+    Expr _or();
+    Expr _and();
     Expr unary();
     Expr terminal();
 
     public:
-    Parser(std::stringstream&);
+    Parser(std::stringstream& input) : lxr(input), scp() { }
     Expr operator()();
 };
+
+#endif
