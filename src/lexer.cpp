@@ -1,4 +1,5 @@
 #include "lexer.hpp"
+#include "error.hpp"
 
 
 Lexer::Lexer(std::stringstream& input)
@@ -77,6 +78,8 @@ Token Lexer::next()
             buffer = c;
         }
         else if (c == EXIT) ctoken = EXIT;
-        else throw 4;
+        else throw err::LexerError(std::string("invalid token"));
     }
+    ctoken = EXIT;
+    return ctoken;
 }

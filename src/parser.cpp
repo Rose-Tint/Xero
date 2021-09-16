@@ -1,4 +1,5 @@
 #include "parser.hpp"
+#include "error.hpp"
 
 
 Expr Parser::scope()
@@ -18,7 +19,7 @@ Expr Parser::assign()
     if (lxr.get() == ASN)
     {
         expr.add(Expr(ASN));
-        if (tok != ID) throw 2;
+        if (tok != ID) throw err::ParserError(std::string("left side of assignment must be an identifier"));
         std::string id = lxr.get_val();
         expr.add(Expr(ID, id));
         lxr.next();
@@ -186,6 +187,7 @@ Expr Parser::unary()
 
 Expr Parser::terminal()
 {
+    static int expr_c = 0;
     std::string arg_s = lxr.get_val();
     Expr expr;
     Token token = lxr.get();
@@ -193,24 +195,27 @@ Expr Parser::terminal()
     switch (token)
     {
         case ID:
-            expr = Expr(token, scp[arg_s].value);
+            expr = Expr(token, scp[arg_s]);
             break;
         case NUM:
             expr = Expr(token, arg_s);
             break;
         case LPAREN:
             expr = add();
-            if (token != RPAREN) throw 2;
+            if (token != RPAREN) throw err::ParserError(std::string("expected ')'"));
             break;
-        /*case LBRACE:
+        case LBRACE:
             expr = scope();
-            if (lxr.get() != RBRACE) throw 2;
-            break;*/ // i dont THINK this is right
+            if (lxr.get() != RBRACE) throw err::ParserError(std::string("expected '}'"));
+            break; // i dont THINK this is right
         case ENDL:
             expr = assign();
             break;
         default:
-            throw 2;
+            std::string msg = std::to_string(expr_c++) + " exprs made) expression '";
+            msg += expr.get_value();
+            msg.append("' fell through to terminal but is invalid terminal expression");
+            throw err::ParserError(msg);
     }
     return expr;
 }
@@ -218,5 +223,7 @@ Expr Parser::terminal()
 
 Expr Parser::operator()()
 {
+    lxr.next();
+    root.add(scope());
     return root;
 }

@@ -1,4 +1,5 @@
 #include "preprocessor.hpp"
+#include "error.hpp"
 
 
 std::stringstream PreProcessor::operator()(std::string main_fname)
@@ -21,7 +22,7 @@ void PreProcessor::process(std::string fname)
             else direct();
         }
         else if (c == '~') should_process = true;
-        else code.put(c);
+        else if (c != '\n') code.put(c);
     }
     curr_file.close();
 }
@@ -55,14 +56,14 @@ void PreProcessor::direct()
     else if (directive == "define")   define();
     else if (directive == "ifdef")    ifdef();
     else if (directive == "ifnotdef") ifnotdef();
-    else throw -2;
+    else throw err::PreProcessorError("invalid directive");
 }
 
 
 void PreProcessor::import()
 {
     std::string fname = get_between('{', '}');
-    if (!(imported.contains(fname)))
+    if (imported.count(fname) != 0)
     {
         imported.insert(fname);
         process(fname);
@@ -71,8 +72,8 @@ void PreProcessor::import()
 
 
 void PreProcessor::define() { defined.insert(get_between('{', '}')); }
-void PreProcessor::ifdef() { if (defined.contains(get_between('{', '}'))) then(); }
-void PreProcessor::ifnotdef() { if (!defined.contains(get_between('{', '}'))) then(); }
+void PreProcessor::ifdef() { if (defined.count(get_between('{', '}')) != 0) then(); }
+void PreProcessor::ifnotdef() { if (defined.count(get_between('{', '}')) == 0) then(); }
 
 
 void PreProcessor::then()
@@ -90,6 +91,6 @@ void PreProcessor::then()
                 direct();
             }
         }
-        else code.put(c);
+        else if (c != '\n') code.put(c);
     }
 }

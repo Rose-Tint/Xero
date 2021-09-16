@@ -15,17 +15,17 @@ class Parser
     Scope scp;
     Expr root = Expr(ENTRY);
 
-    Expr scope();
-    Expr assign();
-    Expr add();
-    Expr mul();
-    Expr cmp();
-    Expr eq();
-    Expr _xor();
-    Expr _or();
-    Expr _and();
-    Expr unary();
-    Expr terminal();
+    Expr* scope();
+    Expr* assign();
+    Expr* add();
+    Expr* mul();
+    Expr* cmp();
+    Expr* eq();
+    Expr* _xor();
+    Expr* _or();
+    Expr* _and();
+    Expr* unary();
+    Expr* terminal();
 
     public:
     Parser(std::stringstream& input) : lxr(input), scp() { }

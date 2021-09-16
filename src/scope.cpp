@@ -1,6 +1,13 @@
 #include "scope.hpp"
 
 
+void Scope::add(std::string key, std::string val)
+{
+    ValueHolder value { val, level };
+    names[key] = std::move(value);
+}
+
+
 void Scope::operator--(int)
 {
     decltype(names) replacement = names;

@@ -18,8 +18,8 @@ class Expr
     Expr* left = nullptr;
     Expr* right = nullptr;
 
-    inline void mov(Expr&&);
-    inline void cpy(const Expr&);
+    void mov(Expr&&);
+    void cpy(const Expr&);
 
     unsigned int depth() const;
 
@@ -37,11 +37,12 @@ class Expr
 
     ~Expr() { delete left; delete right; }
 
-    static Expr unary(Token);
+    static Expr* unary(Token);
 
+    void add(Expr*);
     void add(Expr&);
-    void add(Expr&&);
     bool terminates() const;
+    std::string get_value() const { return value; }
 };
 
 #endif
