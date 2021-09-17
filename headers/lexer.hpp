@@ -1,28 +1,29 @@
-#pragma once
+#ifndef LEXER_HPP
+#define LEXER_HPP
 
 #include <sstream>
-#include <memory>
 
 #include "token.hpp"
 
 
 class Lexer
 {
-    std::stringstream code;
+    std::stringstream& code;
+    Token ctoken;
+    std::string buffer;
 
-    bool is_identifier(char) const;
-    bool is_number_char(char) const;
+    bool is_identifier(char c) const { return isalnum(c) || c == '_'; }
+    bool is_number_char(char c) const { return isdigit(c) || c == '.'; }
     bool is_symbol(char) const;
-    bool is_potential_operator(char) const; // is at least the start of an operator
-    bool is_potential_operator(std::string) const;
-    bool is_operator(std::string) const;
 
-    NumLitToken* make_number();
-    IdentifierToken* make_identifier();
-    OperatorToken* make_operator();
-    SymbolToken* make_symbol();
+    std::string make_number();
+    std::string make_identifier();
 
     public:
     Lexer(std::stringstream&);
-    bool next_token(Token*);
+    Token get() const { return ctoken; }
+    std::string get_val() const { return buffer; }
+    Token next();
 };
+
+#endif

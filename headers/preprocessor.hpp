@@ -1,4 +1,5 @@
-#pragma once
+#ifndef PREPROCESSOR_HPP
+#define PREPROCESSOR_HPP
 
 #include <unordered_set>
 #include <fstream>
@@ -9,27 +10,30 @@ class PreProcessor
 {
     typedef std::unordered_set<std::string> str_set;
 
+    std::ifstream curr_file;
     std::stringstream code;
     str_set imported;
     str_set defined;
 
     // utils
-    void check_and_recurse(str_set&, std::string);
-    void ignore_until(std::ifstream&, char);
-    std::string get_until(std::ifstream&, char);
-    std::string get_between(std::ifstream&, char, char);
+    void check_and_recurse(str_set&, std::string) = delete;
+    void ignore_until(char c) { while (curr_file.get() != c); }
+    std::string get_until(char);
+    std::string get_between(char, char);
 
     void process(std::string);
 
     // directives
-    void direct(std::ifstream&);
-    void import(std::ifstream&);
-    void define(std::ifstream&);
-    void ifdef(std::ifstream&);
-    void ifnotdef(std::ifstream&);
-    void then(std::ifstream&); // not a directive, but called by ifdef and ifnotdef
+    void direct();
+    void import();
+    void define();
+    void ifdef();
+    void ifnotdef();
+    void then(); // not a directive, but called by ifdef and ifnotdef
 
     public:
     PreProcessor() = default;
-    std::stringstream& operator()(std::string);
+    std::stringstream operator()(std::string);
 };
+
+#endif

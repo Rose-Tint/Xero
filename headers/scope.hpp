@@ -1,30 +1,39 @@
-#pragma once
+#ifndef SCOPE_HPP
+#define SCOPE_HPP
 
-#include <unordered_map>
-#include <unordered_set>
+#include <map>
 #include <string>
-#include <cstdint>
 
 #include "token.hpp"
-#include "expression.hpp"
 
 
-typedef unsigned char level_t;
+typedef char level_t;
 
 
 class Scope
 {
-    level_t level = 0;
-    std::unordered_set<std::uint16_t> functions;
-    std::unordered_map<std::string, level_t> names;
+    struct ValueHolder
+    {
+        friend class Scope;
+        std::string value;
+        std::string& operator=(const std::string& val) { return value = val; }
+        ValueHolder(std::string str, level_t lvl) : value(str), level(lvl) {  }
+        ValueHolder() : value(""), level(0) {  }
+        operator std::string&() { return value; }
 
-public:
-    Scope& operator<<(FuncDeclExpr*); // adds a function to the scope
-    Scope& operator<<(TypeExpr*);
-    Scope& operator<<(TerminalExpr*);
-    void level_up() { level++; }
-    void level_down();
-    bool contains(Token*) const;
-    bool contains(TypeExpr*) const;
-    bool contains(FuncDeclExpr*) const;
+        private:
+        level_t level;
+    };
+
+    level_t level;
+    std::map<std::string, ValueHolder> names;
+
+    public:
+    Scope() = default;
+    void add(std::string id, std::string value);
+    void operator++(int) { level++; }
+    void operator--(int);
+    std::string& operator[](const std::string& key) { return names[key]; }
 };
+
+#endif
