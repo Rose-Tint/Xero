@@ -13,23 +13,24 @@ class _Expr_;
 // RAII/smart pointer wrapper for _Expr_
 class ExprPtr
 {
-    friend std::ostream& operator<<(std::ostream&, ExprPtr&);
-    void destroy() noexcept { delete expr; expr = nullptr; }
+    friend std::ostream& operator<<(std::ostream&, ExprPtr);
+
+    void destroy() noexcept;
 
     _Expr_* expr;
 
     public:
-    ExprPtr() noexcept : expr(nullptr) { }
-    explicit ExprPtr(const Token& tok) noexcept : expr(new _Expr_(tok)) { }
-    explicit ExprPtr(const Token& tok, std::string str) noexcept : expr(new _Expr_(tok, str)) { }
-    explicit ExprPtr(const Token& tok, char c) noexcept : expr(new _Expr_(tok, c)) { }
+    ExprPtr() noexcept;
+    explicit ExprPtr(const Token& tok) noexcept;
+    explicit ExprPtr(const Token& tok, std::string str) noexcept;
+    explicit ExprPtr(const Token& tok, char c) noexcept;
 
     ExprPtr(const ExprPtr&) noexcept;
     ExprPtr(ExprPtr&&) noexcept;
     ExprPtr& operator=(const ExprPtr&) noexcept;
     ExprPtr& operator=(ExprPtr&&) noexcept;
 
-    ~ExprPtr() { delete expr; }
+    ~ExprPtr();
 
     // forwarding _Expr_ methods safely
     void add(const ExprPtr&);
@@ -73,7 +74,6 @@ class _Expr_
 
     public:
     static ExprPtr unary(const Token&);
-    _Expr_() = delete;
 };
 
 #endif

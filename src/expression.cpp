@@ -2,6 +2,41 @@
 #include "error.hpp"
 
 
+void ExprPtr::destroy() noexcept
+{
+    delete expr;
+    expr = nullptr;
+}
+
+
+ExprPtr::ExprPtr() noexcept
+    : expr(nullptr)
+{
+    ;
+}
+
+
+ExprPtr::ExprPtr(const Token& tok) noexcept
+    : expr(new _Expr_(tok))
+{
+    ;
+}
+
+
+ExprPtr::ExprPtr(const Token& tok, std::string str) noexcept
+    : expr(new _Expr_(tok, str))
+{
+    ;
+}
+
+
+ExprPtr::ExprPtr(const Token& tok, char c) noexcept
+    : expr(new _Expr_(tok, c))
+{
+    ;
+}
+
+
 ExprPtr::ExprPtr(const ExprPtr& other) noexcept
 {
     destroy();
@@ -31,6 +66,12 @@ ExprPtr& ExprPtr::operator=(ExprPtr&& other) noexcept
     expr = other.expr;
     other.expr = nullptr;
     return *this;
+}
+
+
+ExprPtr::~ExprPtr()
+{
+    delete expr;
 }
 
 
