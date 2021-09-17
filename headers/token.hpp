@@ -26,4 +26,18 @@ enum Token : char
     RBRACE   = '}',
     ENDL     = ';',
 };
+inline bool is_terminal(const Token&)
+{
+    switch (token)
+    {
+        case ID:
+        case NUM:
+        case EXIT:
+        case EMPTY:
+        case ENDL:
+            return true;
+        default:
+            return false;
+    }
+}
 #endif

@@ -72,12 +72,14 @@ ExprPtr& ExprPtr::operator=(ExprPtr&& other) noexcept
 ExprPtr::~ExprPtr()
 {
     delete expr;
+    expr = nullptr;
 }
 
 
 void ExprPtr::add(const ExprPtr& arg)
 {
     if (is_null()) throw err::ExprError("called ExprPtr::add with a nullptr expr");
+    if (this == &arg) throw err::ExprError("attempt to add expr to itself");
     expr->add(arg);
 }
 
@@ -132,7 +134,7 @@ void ExprPtr::set_left(const ExprPtr& arg)
 
 void ExprPtr::set_right(const ExprPtr& arg)
 {
-    if (is_null()) throw err::ExprError("called ExprPtr::set_left with a nullptr expr");
+    if (is_null()) throw err::ExprError("called ExprPtr::set_right with a nullptr expr");
     expr->right = arg;
 }
 
@@ -141,6 +143,14 @@ void ExprPtr::set_value(const std::string& val)
 {
     if (is_null()) throw err::ExprError("called ExprPtr::set_value with a nullptr expr");
     expr->value = val;
+}
+
+
+ExprPtr ExprPtr::unary(const Token& token)
+{
+    ExprPtr expr(token);
+    expr.set_right(ExprPtr(EMPTY));
+    return expr;
 }
 
 
@@ -168,11 +178,11 @@ bool _Expr_::entrance_made = false;
 _Expr_::_Expr_(const Token& tok)
     : token(tok)
 {
-    switch (token) // any fallthrough is intentional for matching
+    switch (token) // if an expression is made without a value arg, token must be one of the following
     {
         case NUM:
         case ID:
-            throw err::ExprError("identifier with no identifier found somehow");
+            throw err::ExprError("identifier or number with no value found somehow");
         case EXIT:
             value = "__EXIT__";
             break;
@@ -217,15 +227,103 @@ void _Expr_::add(ExprPtr expr)
 
 bool _Expr_::terminates() const
 {
-    if (token == ID || token == NUM) return true;
-    if (left.is_null() || right.is_null()) return false;
+    if (is_terminal(token)) return true;
+    else if (left.is_null() || right.is_null()) return false;
     else return (left.terminates() && right.terminates());
 }
 
 
-ExprPtr _Expr_::unary(const Token& token)
+#ifdef X_TESTS
+#include <type_traits>
+namespace tst
 {
-    ExprPtr expr(token);
-    expr.set_right(ExprPtr(EMPTY));
-    return expr;
+    class TestError {};
+    bool operator==(const ExprPtr& l, const ExprPtr& r)
+    {
+        if (&l == &r) return true;
+        if (!l.is_null() && !r.is_null()))
+        {
+            if (l.token() == r.token() && l.value() == r.value())
+            {
+                return (l.left() == r.left()) && (l.right() == r.right());
+            }
+        }
+        return false;
+    }
+
+    template<class G, class E = G>
+    bool check(const G& given, const E& exp)
+    {
+        return given == exp;
+    }
+
+    template<class E, class R, class ...A>
+    bool throws_e(R (*f)(A...), A ...args)
+    {
+        try { f(args...) }
+        catch (E) { return true; }
+        return false;
+    }
+
+    template<Token itok, Token ltok, Token rtok>
+    bool test_ExprPtr(std::string ival, std::string lval, std::string rval)
+    {
+        bool pass = false;
+        ExprPtr root = (itok == ID || itok == NUM) ? ExprPtr(itok, ival) : ExprPtr(itok);
+        ExprPtr left = (ltok == ID || ltok == NUM) ? ExprPtr(ltok, ival) : ExprPtr(ltok);
+        ExprPtr right = (rtok == ID || rtok == NUM) ? ExprPtr(rtok, ival) : ExprPtr(rtok);
+
+        root.add(left);
+        root.add(right);
+        root.add(Expr(ID, "id"));
+        root.add(Expr(NUM, "num"));
+
+        // test constructors and assigners in a new scope for less memory usage
+        {
+            ExprPtr cpy_ctr(root);
+            ExprPtr cpy_op = root;
+            ExprPtr mov_ctr(ExprPtr(itok, ival));
+            ExprPtr mov_op = ExprPtr(itok, ival);
+
+            try
+            {
+                pass &= check<ExprPtr>(root, cpy_ctr);
+                pass &= check<ExprPtr>(root, cpy_op);
+                pass &= check<ExprPtr>(root, mov_ctr);
+                pass &= check<ExprPtr>(root, mov_op);
+            }
+            catch(TestError)
+            {
+                pass = false;
+            }
+        }
+        try
+        {
+            pass &= check<bool>(root.is_null(), false);
+            pass &= check<Token>(root.token(), itok);
+            pass &= check<std::string>(root.value(), ival);
+            pass &= check<ExprPtr>(root.left(), left);
+            pass &= check<ExprPtr>(root.right(), right);
+            pass &= check<bool>(root.terminates(), is_terminal(ltok) && is_terminal(rtok));
+
+            // testing invalid inputs and functions
+            {
+                ExprPtr nullexpr();
+                pass &= throws_e<ExprError, void, const ExprPtr&>(nullexpr.add, root);
+                pass &= throws_e<ExprError, void, void>(nullexpr.terminates);
+                pass &= throws_e<ExprError, Token, void>(nullexpr.token);
+                pass &= throws_e<ExprError, ExprPtr, void>(nullexpr.left);
+                pass &= throws_e<ExprError, ExprPtr, void>(nullexpr.right);
+                pass &= throws_e<ExprError, std::string, void>(nullexpr.value);
+            }
+        }
+        catch (TestError)
+        {
+            pass = false;
+        }
+
+        return pass;
+    }
 }
+#endif
+#endif

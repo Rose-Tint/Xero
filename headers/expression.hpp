@@ -76,4 +76,30 @@ class _Expr_
     static ExprPtr unary(const Token&);
 };
 
+
+const ExprPtr& nullexpr = ExprPtr();
+
+
+#ifdef X_TESTS
+#include <type_traits>
+namespace tst
+{
+#ifndef TESTERROR
+#define TESTERROR
+class TestError {};
+#else
+class TestError;
+#endif
+    bool operator==(const ExprPtr& l, const ExprPtr& r);
+
+    template<class G, class E = G>
+    bool check(const G& given, const E& exp);
+
+    template<class E, class R, class ...A>
+    bool throws_e(R (*)(A...), A...);
+
+    template<Token, Token, Token>
+    bool test_ExprPtr(std::string = "ROOT_ARG", std::string = "LEFT_ARG", std::string = "RIGHT_ARG");
+}
+#endif
 #endif
