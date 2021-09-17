@@ -1,9 +1,5 @@
 #ifndef TOKEN_HPP
 #define TOKEN_HPP
-
-#include <string>
-
-
 enum Token : char
 {
     EXIT     =  0 ,
@@ -13,8 +9,6 @@ enum Token : char
     EMPTY    = -5,
     LPAREN   = '(',
     RPAREN   = ')',
-  //NEG,
-  //POS,
     NOT      = '!',
     AND      = '&',
     OR       = '|',
@@ -32,5 +26,4 @@ enum Token : char
     RBRACE   = '}',
     ENDL     = ';',
 };
-
 #endif

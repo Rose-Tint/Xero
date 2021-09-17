@@ -2,46 +2,141 @@
 #include "error.hpp"
 
 
-bool Expr::entrance_made = false;
-
-
-std::ostream& operator<<(std::ostream& out, Expr& expr)
+ExprPtr::ExprPtr(const ExprPtr& other) noexcept
 {
-    // unsigned int depth = expr.depth();
-    // for (unsigned int i = 0; i < depth; i++) out << "\n";
-    // for (unsigned int i = 0; i < depth; i++) out << "   ";
-    out << expr.value;
-    if (expr.left != nullptr) out << *expr.left;
-    if (expr.right != nullptr) out << *expr.right;
+    destroy();
+    expr = (other.expr == nullptr) ? nullptr : new _Expr_(*other.expr);
+}
+
+
+ExprPtr::ExprPtr(ExprPtr&& other) noexcept
+{
+    expr = other.expr;
+    other.expr = nullptr;
+}
+
+
+ExprPtr& ExprPtr::operator=(const ExprPtr& other) noexcept
+{
+    if (this == &other) return *this;
+    destroy();
+    expr = (other.expr == nullptr) ? nullptr : new _Expr_(*other.expr);
+    return *this;
+}
+
+
+ExprPtr& ExprPtr::operator=(ExprPtr&& other) noexcept
+{
+    if (this == &other) return *this;
+    expr = other.expr;
+    other.expr = nullptr;
+    return *this;
+}
+
+
+void ExprPtr::add(const ExprPtr& arg)
+{
+    if (is_null()) throw err::ExprError("called ExprPtr::add with a nullptr expr");
+    expr->add(arg);
+}
+
+
+bool ExprPtr::is_null() const
+{
+    return (expr == nullptr);
+}
+
+
+bool ExprPtr::terminates() const
+{
+    if (is_null()) throw err::ExprError("called ExprPtr::terminates with a nullptr expr");
+    return expr->terminates();
+}
+
+
+Token ExprPtr::token() const
+{
+    if (is_null()) throw err::ExprError("called ExprPtr::token with a nullptr expr");
+    return expr->token;
+}
+
+
+ExprPtr ExprPtr::left() const
+{
+    if (is_null()) throw err::ExprError("called ExprPtr::terminates with a nullptr expr");
+    return expr->left;
+}
+
+
+ExprPtr ExprPtr::right() const
+{
+    if (is_null()) throw err::ExprError("called ExprPtr::right with a nullptr expr");
+    return expr->right;
+}
+
+
+std::string ExprPtr::value() const
+{
+    if (is_null()) throw err::ExprError("called ExprPtr::value with a nullptr expr");
+    return expr->value;
+}
+
+
+void ExprPtr::set_left(const ExprPtr& arg)
+{
+    if (is_null()) throw err::ExprError("called ExprPtr::set_left with a nullptr expr");
+    expr->left = arg;
+}
+
+
+void ExprPtr::set_right(const ExprPtr& arg)
+{
+    if (is_null()) throw err::ExprError("called ExprPtr::set_left with a nullptr expr");
+    expr->right = arg;
+}
+
+
+void ExprPtr::set_value(const std::string& val)
+{
+    if (is_null()) throw err::ExprError("called ExprPtr::set_value with a nullptr expr");
+    expr->value = val;
+}
+
+
+/* %%%%%%%%% cout overload %%%%%%%%% */
+
+
+std::ostream& operator<<(std::ostream& out, ExprPtr in)
+{
+    if (!in.is_null())
+    {
+        out << in.value();
+        if (!in.left().is_null()) out << in.left();
+        if (!in.right().is_null()) out << in.right();
+    }
     return out;
 }
 
 
-unsigned int Expr::depth() const
-{
-    if (left == nullptr)
-    {
-        if (right == nullptr) return 1;
-        return right->depth();
-    }
-    else if (right == nullptr) return left->depth();
-    else return std::max(left->depth(), right->depth());
-}
+/* %%%%%%%%%% _EXPR_ DEFS %%%%%%%%%% */
 
 
-Expr::Expr(Token tok)
+bool _Expr_::entrance_made = false;
+
+
+_Expr_::_Expr_(const Token& tok)
     : token(tok)
 {
     switch (token) // any fallthrough is intentional for matching
     {
         case NUM:
         case ID:
-            throw err::SyntaxError(std::string("identifier with no identifier found somehow"));
+            throw err::ExprError("identifier with no identifier found somehow");
         case EXIT:
             value = "__EXIT__";
             break;
         case ENTRY:
-            if (entrance_made) throw err::SyntaxError(std::string("application entry can only be made once"));
+            if (entrance_made) throw err::ExprError("application entry can only be made once");
             entrance_made = true;
             value = "__ENTRY__";
             break;
@@ -54,82 +149,42 @@ Expr::Expr(Token tok)
 }
 
 
-Expr::Expr(Token tok, std::string val)
+_Expr_::_Expr_(const Token& tok, std::string val)
     : token(tok), value(val)
 {
-    std::cout << value;;
+    ;
 }
 
 
-Expr::Expr(Token tok, char c)
+_Expr_::_Expr_(const Token& tok, char c)
     : token(tok), value(1, c)
 {
-    std::cout << value;;
+    ;
 }
 
 
-void Expr::mov(Expr&& other)
+void _Expr_::add(ExprPtr expr)
 {
-    left = other.left;
-    right = other.left;
-    token = other.token;
-    value = other.value;
-    other.left = nullptr;
-    other.right = nullptr;
-    other.value = "";
+    if (terminates()) throw err::ExprError("expression terminates, but was told to add an expr");
+    if (left.is_null()) left = std::move(expr);
+    else if (!left.terminates()) left.add(expr);
+    else if (right.is_null()) right = std::move(expr);
+    else if (!right.terminates() && right.token() != EMPTY) right.add(expr);
+    else throw err::ExprError("reached end of _Expr_::add");
 }
 
 
-void Expr::cpy(const Expr& other)
-{
-    delete left;
-    delete right;
-    token = other.token;
-    value = other.value;
-    left = other.left;
-    right = other.right;
-}
-
-
-Expr& Expr::operator=(Expr&& other)
-{
-    if (this == &other) return *this;
-    if (token == ENTRY) throw err::SyntaxError(std::string("entry cannot be moved"));
-    mov(std::move(other));
-    return *this;
-}
-
-
-Expr& Expr::operator=(const Expr& other)
-{
-    if (this == &other) return *this;
-    cpy(other);
-    return *this;
-}
-
-
-Expr* Expr::unary(Token token)
-{
-    Expr* expr = new Expr(token);
-    expr->right = new Expr(EMPTY);
-    return expr;
-}
-
-
-void Expr::add(Expr* expr)
-{
-    if (terminates()) throw err::SyntaxError(std::string("expression terminates, but was told to add an expr"));
-    if (left == nullptr) left = expr;
-    else if (!left->terminates()) left->add(expr);
-    else if (right == nullptr) right = expr;
-    else if (!right->terminates() && right->token != EMPTY) right->add(expr);
-    else throw err::SyntaxError(std::string("reached end of Expr::add"));
-}
-
-
-bool Expr::terminates() const
+bool _Expr_::terminates() const
 {
     if (token == ID || token == NUM) return true;
-    if (left == nullptr || right == nullptr) return false;
-    else return (left->terminates() && right->terminates());
+    if (left.is_null() || right.is_null()) return false;
+    else return (left.terminates() && right.terminates());
+}
+
+
+ExprPtr _Expr_::unary(const Token& token)
+{
+    ExprPtr expr(token);
+    expr.set_right(ExprPtr(EMPTY));
+    return expr;
 }

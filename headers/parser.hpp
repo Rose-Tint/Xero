@@ -3,33 +3,32 @@
 
 #include <sstream>
 
-#include "expression.hpp"
-#include "token.hpp"
 #include "lexer.hpp"
 #include "scope.hpp"
+#include "expression.hpp"
 
 
 class Parser
 {
     Lexer lxr;
     Scope scp;
-    Expr* root = new Expr(ENTRY);
+    ExprPtr root = ExprPtr(ENTRY);
 
-    Expr* scope();
-    Expr* assign();
-    Expr* add();
-    Expr* mul();
-    Expr* cmp();
-    Expr* eq();
-    Expr* _xor();
-    Expr* _or();
-    Expr* _and();
-    Expr* unary();
-    Expr* terminal();
+    ExprPtr scope();
+    ExprPtr assign();
+    ExprPtr add();
+    ExprPtr mul();
+    ExprPtr cmp();
+    ExprPtr eq();
+    ExprPtr _xor();
+    ExprPtr _or();
+    ExprPtr _and();
+    ExprPtr unary();
+    ExprPtr terminal();
 
     public:
     Parser(std::stringstream& input) : lxr(input), scp() { }
-    Expr* operator()();
+    ExprPtr operator()();
 };
 
 #endif

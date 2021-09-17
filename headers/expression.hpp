@@ -1,47 +1,79 @@
 #ifndef EXPRESSION_HPP
 #define EXPRESSION_HPP
 
-#include <memory>
 #include <iostream>
-#include <cstddef>
 #include <string>
 
 #include "token.hpp"
 
 
-class Expr
+class _Expr_;
+
+
+// RAII/smart pointer wrapper for _Expr_
+class ExprPtr
 {
-    friend std::ostream& operator<<(std::ostream&, Expr&);
-    static bool entrance_made;
-    Token token;
-    std::string value;
-    Expr* left = nullptr;
-    Expr* right = nullptr;
+    friend std::ostream& operator<<(std::ostream&, ExprPtr&);
+    void destroy() noexcept { delete expr; expr = nullptr; }
 
-    void mov(Expr&&);
-    void cpy(const Expr&);
-
-    unsigned int depth() const;
+    _Expr_* expr;
 
     public:
-    Expr() : token(EMPTY) { }
-    explicit Expr(Token);
-    explicit Expr(Token, std::string);
-    explicit Expr(Token, char);
+    ExprPtr() noexcept : expr(nullptr) { }
+    explicit ExprPtr(const Token& tok) noexcept : expr(new _Expr_(tok)) { }
+    explicit ExprPtr(const Token& tok, std::string str) noexcept : expr(new _Expr_(tok, str)) { }
+    explicit ExprPtr(const Token& tok, char c) noexcept : expr(new _Expr_(tok, c)) { }
 
-    Expr& operator=(Expr&&);
-    Expr& operator=(const Expr&);
+    ExprPtr(const ExprPtr&) noexcept;
+    ExprPtr(ExprPtr&&) noexcept;
+    ExprPtr& operator=(const ExprPtr&) noexcept;
+    ExprPtr& operator=(ExprPtr&&) noexcept;
 
-    Expr(Expr&& other) { mov(std::move(other)); }
-    Expr(const Expr& other) { cpy(other); }
+    ~ExprPtr() { delete expr; }
 
-    ~Expr() { delete left; delete right; }
-
-    static Expr* unary(Token);
-
-    void add(Expr*);
+    // forwarding _Expr_ methods safely
+    void add(const ExprPtr&);
+    bool is_null() const;
     bool terminates() const;
-    std::string get_value() const { return value; }
+
+    // getters
+    Token token() const;
+    ExprPtr left() const;
+    ExprPtr right() const;
+    std::string value() const;
+
+    // setters
+    void set_left(const ExprPtr&);
+    void set_right(const ExprPtr&);
+    void set_value(const std::string&);
+};
+
+
+class _Expr_
+{
+    friend class ExprPtr;
+    static bool entrance_made;
+
+    Token token;
+    std::string value;
+    ExprPtr left;
+    ExprPtr right;
+
+    _Expr_() : token(EMPTY) { }
+    explicit _Expr_(const Token&);
+    explicit _Expr_(const Token&, std::string);
+    explicit _Expr_(const Token&, char);
+    _Expr_(const _Expr_&) = default;
+    _Expr_(_Expr_&&) = default;
+    _Expr_& operator=(const _Expr_&) = default;
+    _Expr_& operator=(_Expr_&&) = default;
+
+    void add(ExprPtr);
+    bool terminates() const;
+
+    public:
+    static ExprPtr unary(const Token&);
+    _Expr_() = delete;
 };
 
 #endif

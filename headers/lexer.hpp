@@ -2,7 +2,6 @@
 #define LEXER_HPP
 
 #include <sstream>
-#include <memory>
 
 #include "token.hpp"
 

@@ -1,45 +1,39 @@
 #include "parser.hpp"
 #include "error.hpp"
-#include <iostream>
 
 
-Expr* Parser::scope()
+ExprPtr Parser::scope()
 {
-    Expr* expr = new Expr(LBRACE);
-    root->add(expr);
+    ExprPtr expr(LBRACE);
     scp++;
-    while (lxr.get() != RBRACE) expr->add(assign());
+    while (lxr.get() != RBRACE) expr.add(assign());
     scp--;
+    root.add(expr);
     return expr;
 }
 
 
-Expr* Parser::assign()
+ExprPtr Parser::assign()
 {
     Token tok = lxr.get();
-    Expr* expr = add();
+    ExprPtr expr = add();
     if (lxr.get() == ASN)
     {
-        expr->add(new Expr(ASN));
-        if (tok != ID)
-        {
-            delete expr;
-            delete root;
-            throw err::ParserError(std::string("left side of assignment must be an identifier"));
-        }
+        expr.add(ExprPtr(ASN));
+        if (tok != ID) throw err::ParserError("left side of assignment must be an identifier");
         std::string id = lxr.get_val();
-        expr->add(new Expr(ID, id));
+        expr.add(ExprPtr(ID, id));
         lxr.next();
-        expr->add(add());
+        expr.add(add());
         scp.add(id, lxr.get_val());
     }
     return expr;
 }
 
 
-Expr* Parser::add()
+ExprPtr Parser::add()
 {
-    Expr* expr = mul();
+    ExprPtr expr = mul();
     while (1)
     {
         Token token = lxr.get();
@@ -47,9 +41,9 @@ Expr* Parser::add()
         {
             case (PLUS): // intentional fallthrough
             case (MINUS):
-                expr->add(new Expr(token));
+                expr.add(ExprPtr(token));
                 lxr.next();
-                expr->add(mul());
+                expr.add(mul());
                 break;
             default:
                 return expr;
@@ -58,9 +52,9 @@ Expr* Parser::add()
 }
 
 
-Expr* Parser::mul()
+ExprPtr Parser::mul()
 {
-    Expr* expr = cmp();
+    ExprPtr expr = cmp();
     while (1)
     {
         Token token = lxr.get();
@@ -69,9 +63,9 @@ Expr* Parser::mul()
             case (MUL):
             case (DIV):
             case (MOD):
-                expr->add(new Expr(token));
+                expr.add(ExprPtr(token));
                 lxr.next();
-                expr->add(cmp());
+                expr.add(cmp());
                 break;
             default:
                 return expr;
@@ -80,9 +74,9 @@ Expr* Parser::mul()
 }
 
 
-Expr* Parser::cmp()
+ExprPtr Parser::cmp()
 {
-    Expr* expr = eq();
+    ExprPtr expr = eq();
     while (1)
     {
         Token token = lxr.get();
@@ -90,9 +84,9 @@ Expr* Parser::cmp()
         {
             case (LT):
             case (GT):
-                expr->add(new Expr(token));
+                expr.add(ExprPtr(token));
                 lxr.next();
-                expr->add(eq());
+                expr.add(eq());
                 break;
             default:
                 return expr;
@@ -101,77 +95,77 @@ Expr* Parser::cmp()
 }
 
 
-Expr* Parser::eq()
+ExprPtr Parser::eq()
 {
-    Expr* expr = _xor();
+    ExprPtr expr = _xor();
     while (1)
     {
         Token token = lxr.get();
         if (token == EQ)
         {
-            expr->add(new Expr(token));
+            expr.add(ExprPtr(token));
             lxr.next();
-            expr->add(_xor());
+            expr.add(_xor());
         }
         else return expr;
     }
 }
 
 
-Expr* Parser::_xor()
+ExprPtr Parser::_xor()
 {
-    Expr* expr = _or();
+    ExprPtr expr = _or();
     while (1)
     {
         Token token = lxr.get();
         if (token == XOR)
         {
-            expr->add(new Expr(token));
+            expr.add(ExprPtr(token));
             lxr.next();
-            expr->add(_or());
+            expr.add(_or());
         }
         else return expr;
     }
 }
 
 
-Expr* Parser::_or()
+ExprPtr Parser::_or()
 {
-    Expr* expr = _and();
+    ExprPtr expr = _and();
     while (1)
     {
         Token token = lxr.get();
         if (token == OR)
         {
-            expr->add(new Expr(token));
+            expr.add(ExprPtr(token));
             lxr.next();
-            expr->add(_and());
+            expr.add(_and());
         }
         else return expr;
     }
 }
 
 
-Expr* Parser::_and()
+ExprPtr Parser::_and()
 {
-    Expr* expr = unary();
+    ExprPtr expr = unary();
     while (1)
     {
         Token token = lxr.get();
         if (token == AND)
         {
-            expr->add(new Expr(token));
+            expr.add(ExprPtr(token));
             lxr.next();
-            expr->add(unary());
+            expr.add(unary());
         }
         else return expr;
     }
 }
 
 
-Expr* Parser::unary()
+ExprPtr Parser::unary()
 {
-    Expr* expr = terminal();
+    ExprPtr expr = terminal();
     while (1)
     {
         Token token = lxr.get();
@@ -180,10 +174,10 @@ Expr* Parser::unary()
             case (PLUS):
             case (MINUS):
             case (NOT):{
-                Expr* unary = Expr::unary(token);
+                ExprPtr unary = _Expr_::unary(token);
                 lxr.next();
-                unary->add(terminal());
-                expr->add(unary);
+                unary.add(terminal());
+                expr.add(unary);
             } break;
             default:
                 return expr;
@@ -192,57 +186,42 @@ Expr* Parser::unary()
 }
 
 
-Expr* Parser::terminal()
+ExprPtr Parser::terminal()
 {
     static int expr_c = 0;
     std::string arg_s = lxr.get_val();
-    Expr* expr = nullptr;
+    ExprPtr expr;
     Token token = lxr.get();
     lxr.next();
     switch (token)
     {
         case ID:
-            expr = new Expr(token, scp[arg_s]);
+            expr = ExprPtr(token, scp[arg_s]);
             break;
         case NUM:
-            expr = new Expr(token, arg_s);
+            expr = ExprPtr(token, arg_s);
             break;
         case LPAREN:
             expr = add();
-            if (token != RPAREN)
-            {
-                delete expr;
-                delete root;
-                throw err::ParserError(std::string("expected ')'"));
-            }
+            if (token != RPAREN) throw err::ParserError("expected ')'");
             break;
         case LBRACE:
             expr = scope();
-            if (lxr.get() != RBRACE)
-            {
-                delete expr;
-                delete root;
-                throw err::ParserError(std::string("expected '}'"));
-            }
+            if (lxr.get() != RBRACE) throw err::ParserError("expected '}'");
             break;
         case ENDL:
             expr = assign();
             break;
         default:
-            std::string msg = std::to_string(expr_c++) + " exprs made) expression '";
-            msg += expr->get_value();
-            msg.append("' fell through to terminal but is invalid terminal expression");
-            delete expr;
-            delete root;
-            throw err::ParserError(msg);
+            throw err::ParserError("expression '" + expr.value() + "' fell through to terminal but is invalid terminal expression");
     }
     return expr;
 }
 
 
-Expr* Parser::operator()()
+ExprPtr Parser::operator()()
 {
     lxr.next();
-    root->add(scope());
+    root.add(scope());
     return root;
 }

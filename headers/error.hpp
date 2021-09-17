@@ -12,6 +12,7 @@ namespace err
         using runtime_error::runtime_error;
     };
 
+    typedef _Error_<1> ExprError;
     typedef _Error_<1> ParserError;
     typedef _Error_<2> LexerError;
     typedef _Error_<3> SyntaxError;
