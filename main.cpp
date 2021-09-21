@@ -7,21 +7,6 @@
 #include "preprocessor.hpp"
 #include "parser.hpp"
 
-#ifdef X_TESTS
-#define X_BLANK_S "__BLANK_TEST__"
-int main(void)
-{
-    // ExprPtr tests
-    // syntactically correct
-    test_ExprPtr<ASN, ID, NUM>();
-    test_ExprPtr<ADD, NUM, NUM
-
-    // syntactically incorrect
-    test_ExprPtr<ADD, NUM, LBRACE>(); // should throw an error
-    test_ExprPtr<NUM, XOR, EXIT>(); // should also throw an error
-    test_ExprPtr<ID, ENTRY, SUB>(); // should throw an error
-}
-#else
 int main(int argc, char** argv)
 {
     if (argc < 2)
@@ -43,4 +28,3 @@ int main(int argc, char** argv)
     catch (err::SyntaxError e)       { std::cout<<"Syntax Error: "<<e.what()<<std::endl; }
     catch (err::PreProcessorError e) { std::cout<<"No Arg Error: "<<e.what()<<std::endl; }
 }
-#endif
