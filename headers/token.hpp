@@ -26,7 +26,7 @@ enum Token : char
     RBRACE   = '}',
     ENDL     = ';',
 };
-inline bool is_terminal(const Token&)
+inline bool is_terminal(const Token& token)
 {
     switch (token)
     {

@@ -233,97 +233,15 @@ bool _Expr_::terminates() const
 }
 
 
-#ifdef X_TESTS
-#include <type_traits>
-namespace tst
+bool operator==(const ExprPtr& l, const ExprPtr& r)
 {
-    class TestError {};
-    bool operator==(const ExprPtr& l, const ExprPtr& r)
+    if (&l == &r) return true;
+    if (!(l.is_null() || r.is_null()))
     {
-        if (&l == &r) return true;
-        if (!l.is_null() && !r.is_null()))
+        if (l.token() == r.token() && l.value() == r.value())
         {
-            if (l.token() == r.token() && l.value() == r.value())
-            {
-                return (l.left() == r.left()) && (l.right() == r.right());
-            }
+            return (l.left() == r.left()) && (l.right() == r.right());
         }
-        return false;
     }
-
-    template<class G, class E = G>
-    bool check(const G& given, const E& exp)
-    {
-        return given == exp;
-    }
-
-    template<class E, class R, class ...A>
-    bool throws_e(R (*f)(A...), A ...args)
-    {
-        try { f(args...) }
-        catch (E) { return true; }
-        return false;
-    }
-
-    template<Token itok, Token ltok, Token rtok>
-    bool test_ExprPtr(std::string ival, std::string lval, std::string rval)
-    {
-        bool pass = false;
-        ExprPtr root = (itok == ID || itok == NUM) ? ExprPtr(itok, ival) : ExprPtr(itok);
-        ExprPtr left = (ltok == ID || ltok == NUM) ? ExprPtr(ltok, ival) : ExprPtr(ltok);
-        ExprPtr right = (rtok == ID || rtok == NUM) ? ExprPtr(rtok, ival) : ExprPtr(rtok);
-
-        root.add(left);
-        root.add(right);
-        root.add(Expr(ID, "id"));
-        root.add(Expr(NUM, "num"));
-
-        // test constructors and assigners in a new scope for less memory usage
-        {
-            ExprPtr cpy_ctr(root);
-            ExprPtr cpy_op = root;
-            ExprPtr mov_ctr(ExprPtr(itok, ival));
-            ExprPtr mov_op = ExprPtr(itok, ival);
-
-            try
-            {
-                pass &= check<ExprPtr>(root, cpy_ctr);
-                pass &= check<ExprPtr>(root, cpy_op);
-                pass &= check<ExprPtr>(root, mov_ctr);
-                pass &= check<ExprPtr>(root, mov_op);
-            }
-            catch(TestError)
-            {
-                pass = false;
-            }
-        }
-        try
-        {
-            pass &= check<bool>(root.is_null(), false);
-            pass &= check<Token>(root.token(), itok);
-            pass &= check<std::string>(root.value(), ival);
-            pass &= check<ExprPtr>(root.left(), left);
-            pass &= check<ExprPtr>(root.right(), right);
-            pass &= check<bool>(root.terminates(), is_terminal(ltok) && is_terminal(rtok));
-
-            // testing invalid inputs and functions
-            {
-                ExprPtr nullexpr();
-                pass &= throws_e<ExprError, void, const ExprPtr&>(nullexpr.add, root);
-                pass &= throws_e<ExprError, void, void>(nullexpr.terminates);
-                pass &= throws_e<ExprError, Token, void>(nullexpr.token);
-                pass &= throws_e<ExprError, ExprPtr, void>(nullexpr.left);
-                pass &= throws_e<ExprError, ExprPtr, void>(nullexpr.right);
-                pass &= throws_e<ExprError, std::string, void>(nullexpr.value);
-            }
-        }
-        catch (TestError)
-        {
-            pass = false;
-        }
-
-        return pass;
-    }
+    return l.is_null() && r.is_null();
 }
-#endif
-#endif
