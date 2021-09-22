@@ -17,7 +17,7 @@ class ExprPtr
 
     void destroy() noexcept;
 
-    _Expr_* expr;
+    _Expr_* expr = nullptr;
 
     public:
     ExprPtr() noexcept;
@@ -76,5 +76,5 @@ class _Expr_
 };
 
 
-const ExprPtr& nullexpr = ExprPtr();
+// const ExprPtr& nullexpr = ExprPtr();
 #endif

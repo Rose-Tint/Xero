@@ -2,6 +2,7 @@
 #include <iostream>
 
 #include "expression.hpp"
+#include "error.hpp"
 
 namespace tst
 {
@@ -24,22 +25,19 @@ namespace tst
 
     class ExprPtrTest final
     {
-        std::ostream out;
         ExprPtr ref;
 
-        class NoErr { };
+        template<exp_behavior, class = err::ExprError>
+        bool test_add(Token, Token, Token);
 
-        template<exp_behavior, class = NoErr>
-        bool test_add(Token, Token, Token) const;
-
-        template<exp_behavior, class = NoErr>
-        bool test_unary(Token, Token) const;
+        template<exp_behavior, class = err::ExprError>
+        bool test_unary(Token, Token);
 
         // makes an ExprPtr out of potentially just a token
         static void asn(ExprPtr&, Token, std::string = "default_arg");
 
         public:
-        ExprPtrTest(Token, const std::ostream& = std::cout);
+        ExprPtrTest(Token);
         bool operator()(int&);
     };
 }

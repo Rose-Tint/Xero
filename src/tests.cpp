@@ -1,7 +1,9 @@
-#include <random>
+#include <string>
 
 #include "tests.hpp"
 #include "error.hpp"
+
+#define COUTDEBUG std::cout << "here " << std::endl;
 
 static std::string ttos(const Token& t)
 {
@@ -35,94 +37,110 @@ static std::string ttos(const Token& t)
 
 namespace tst
 {
-    using uint32_t = uint_least32_t;
-    using engine = std::mt19937;
-
-    std::random_device os_seed;
-    const uint32_t seed = os_seed();
-    engine gen(seed);
-    std::uniform_int_distribution<uint32_t> dist(0, 22);
-
-    // random token generator
-    Token rtg()
+    ExprPtrTest::ExprPtrTest(Token token)
     {
-        auto n = dist(gen) - 5;
-        switch(n)
-        {
-            case 0 : return EXIT;
-            case 1 : return ENTRY;
-            case 2 : return NUM;
-            case 3 : return ID;
-            case 4 : return EMPTY;
-            case 5 : return LPAREN;
-            case 6 : return RPAREN;
-            case 7 : return NOT;
-            case 8 : return AND;
-            case 9 : return OR;
-            case 10: return XOR;
-            case 11: return EQ;
-            case 12: return GT;
-            case 13: return LT;
-            case 14: return MOD;
-            case 15: return DIV;
-            case 16: return MUL;
-            case 17: return PLUS;
-            case 18: return MINUS;
-            case 19: return ASN;
-            case 20: return LBRACE;
-            case 21: return RBRACE;
-            case 22: return ENDL;
-        }
-    }
-
-    ExprPtrTest::ExprPtrTest(Token token, const std::ostream& s)
-        : out(s.rdbuf())
-    {
+        ref = ExprPtr();
         asn(ref, token);
     }
 
-    template<exp_behavior eb, class E>
-    bool ExprPtrTest::test_add(Token fl_tok, Token fr_tok, Token sl_tok) const
+    void ExprPtrTest::asn(ExprPtr& e, Token t, std::string s)
     {
-        fprintf(out, "add(%s, %s, %s): ", ttos(fl_tok), ttos(fr_tok), ttos(sl_tok));
+        switch (t)
+        {
+            case ID:
+            case NUM:
+                e = ExprPtr(t, s);
+                return;
+            default:
+                e = ExprPtr(t);
+                return;
+        }
+    }
+
+    template<exp_behavior eb, class E>
+    bool ExprPtrTest::test_add(Token fl_tok, Token fr_tok, Token sl_tok)
+    {
+        printf("add(%-6s, %-6s, %-6s): ", ttos(fl_tok).c_str(), ttos(fr_tok).c_str(), ttos(sl_tok).c_str());
+        std::cout.flush();
+
+        if (!is_terminal(sl_tok) && eb == EQUATE)
+        {
+            std::cout << "FAIL (invalid test arg (non terminating sl))";
+            return false;
+        }
+        if (is_terminal(fl_tok) && eb == EQUATE)
+        {
+            std::cout << "FAIL (invalid test arg (terminating fl))";
+            return false;
+        }
+
         bool pass = false;
         ExprPtr root = ref;
         ExprPtr exp_fl;
         ExprPtr exp_fr;
         ExprPtr exp_sl;
+        ExprPtr exp_sr;
 
         asn(exp_fl, fl_tok, "fl");
         asn(exp_fr, fr_tok, "fr");
         asn(exp_sl, sl_tok, "sl");
-
+        asn(exp_sr, ID    , "sr");
+ 
         try
         {
             root.add(exp_fl);
             root.add(exp_fr);
             root.add(exp_sl);
+            root.add(exp_sr);
 
             if (eb == EQUATE)
             {
+                if (root.is_null())
+                {
+                    std::cout << "FAIL (root is null)";
+                    return false;
+                }
+                else if (root.left().is_null())
+                {
+                    std::cout << "FAIL (left is null)";
+                    return false;
+                }
+                else if (root.right().is_null())
+                {
+                    std::cout << "FAIL (right is null)";
+                    return false;
+                }
+                else if (root.left().left().is_null())
+                {
+                    std::cout << "FAIL (left.left is null)";
+                    return false;
+                }
+                else if (root.left().right().is_null())
+                {
+                    std::cout << "FAIL (left.right is null)";
+                    return false;
+                }
                 pass &= (root.left().token() == exp_fl.token());
                 pass &= (root.right().token() == exp_fr.token());
                 pass &= (root.left().left().token() == exp_sl.token());
-                out << (pass) ? "PASS" : "FAIL";
+                pass &= (root.left().right().token() == ID);
+                std::cout << ((pass) ? "PASS" : "FAIL (non-matching tokens)");
                 return pass;
             }
-            out << "FAIL";
+            std::cout << "FAIL (expected error not thrown)";
             return false;
         }
         catch(E)
         {
-            out << (eb == THROW) ? "PASS" : "FAIL";
+            std::cout << ((eb == THROW) ? "PASS" : "FAIL (unexpected error thrown)");
             return eb == THROW;
         }
     }
 
     template<exp_behavior eb, class E>
-    bool ExprPtrTest::test_unary(Token op_tok, Token operand_tok) const
+    bool ExprPtrTest::test_unary(Token op_tok, Token operand_tok)
     {
-        fprintf(out, "unary(%s).add(%s): ", ttos(op_tok), ttos(operand_tok));
+        printf("unary(%s) -> add(%s):    ", ttos(op_tok).c_str(), ttos(operand_tok).c_str());
         bool pass = false;
         ExprPtr op = ExprPtr::unary(op_tok);
         ExprPtr exp_operand;
@@ -131,20 +149,20 @@ namespace tst
 
         try
         {
-            exp_operator.add(exp_operand);
+            op.add(exp_operand);
             if (eb == EQUATE)
             {
                 pass &= (op.left().token() == operand_tok);
                 pass &= (op.right().token() == EMPTY);
-                out << (pass) ? "PASS" : "FAIL";
+                std::cout << ((pass) ? "PASS" : "FAIL (non-matching tokens)");
                 return pass;
             }
-            out << "FAIL";
+            std::cout << "FAIL (expected error not thrown)";
             return false;
         }
         catch(E)
         {
-            out << (eb == THROW) ? "PASS" : "FAIL";
+            std::cout << ((eb == THROW) ? "PASS" : "FAIL (unexpected error thrown)");
             return eb == THROW;
         }
     }
@@ -152,21 +170,23 @@ namespace tst
     bool ExprPtrTest::operator()(int& indent)
     {
         bool pass = false;
-        std::string indent_s(indent + 1, '\t');
-        out << std::string(indent, '\t') << "ExprPtr Tests:" << std::endl << indent_s;
+        std::cout << "ExprPtr Tests:\n  non throwing" << std::endl << '\t';
 
-        pass &= test_add<EQUATE>                (ASN  , ID  , NUM   ); out<<std::endl<<indent_s;
-        pass &= test_add<EQUATE>                (PLUS , NUM , NUM   ); out<<std::endl<<indent_s;
-        pass &= test_add<EQUATE>                (MOD  , PLUS, ID    ); out<<std::endl<<indent_s;
-        pass &= test_add<EQUATE>                (DIV  , EQ  , MUL   ); out<<std::endl<<indent_s;
-        pass &= test_add<EQUATE>                (LT   , ID  , GT    ); out<<std::endl<<indent_s;
-        pass &= test_add<THROW, err::ExprError> (EMPTY, NUM , ID    ); out<<std::endl<<indent_s;
-        pass &= test_add<THROW, err::ExprError> (ID   , NUM , PLUS  ); out<<std::endl<<indent_s;
-        pass &= test_add<THROW, err::ExprError> (EXIT , DIV , XOR   ); out<<std::endl<<indent_s;
-        pass &= test_add<THROW, err::ExprError> (NUM  , NUM , NUM   ); out<<std::endl<<indent_s;
-        pass &= test_add<THROW, err::ExprError> (ENDL , AND , LBRACE); out<<std::endl<<indent_s;
+        pass &= test_add <EQUATE> (ASN , ID  , NUM); std::cout << std::endl << '\t';
+        pass &= test_add <EQUATE> (PLUS, NUM , NUM); std::cout << std::endl << '\t';
+        pass &= test_add <EQUATE> (MOD , PLUS, ID ); std::cout << std::endl << '\t';
+        pass &= test_add <EQUATE> (DIV , EQ  , NUM); std::cout << std::endl << '\t';
+        pass &= test_add <EQUATE> (LT  , ID  , ID ); std::cout << std::endl << "  ";
 
-        pass &= test_unary<EQUATE>(MINUS, NUM); out<<std::endl<<indent_s;
+        std::cout << "throwing" << std::endl << '\t';
+
+        pass &= test_add <THROW> (EMPTY, NUM , ID    ); std::cout << std::endl << '\t';
+        pass &= test_add <THROW> (ID   , NUM , PLUS  ); std::cout << std::endl << '\t';
+        pass &= test_add <THROW> (EXIT , DIV , XOR   ); std::cout << std::endl << '\t';
+        pass &= test_add <THROW> (NUM  , NUM , NUM   ); std::cout << std::endl << '\t';
+        pass &= test_add <THROW> (ENDL , AND , LBRACE); std::cout << std::endl << '\t';
+
+        pass &= test_unary<EQUATE>(MINUS, NUM); std::cout << std::endl << '\t';
 
         return pass;
     }

@@ -174,7 +174,7 @@ ExprPtr Parser::unary()
             case (PLUS):
             case (MINUS):
             case (NOT):{
-                ExprPtr unary = _Expr_::unary(token);
+                ExprPtr unary = ExprPtr::unary(token);
                 lxr.next();
                 unary.add(terminal());
                 expr.add(unary);
