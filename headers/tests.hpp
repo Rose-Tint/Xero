@@ -1,7 +1,12 @@
 #ifndef TESTS_HPP
+#include <iostream>
+
 #include "expression.hpp"
+
 namespace tst
 {
+    int rng(int = 0, int = 100);
+
     class TestError { };
 
     template<class T>
@@ -19,7 +24,7 @@ namespace tst
 
     class ExprPtrTest final
     {
-        std::ostream& out;
+        std::ostream out;
         ExprPtr ref;
 
         class NoErr { };
@@ -34,8 +39,8 @@ namespace tst
         static void asn(ExprPtr&, Token, std::string = "default_arg");
 
         public:
-        ExprPtrTest(Token);
-        bool operator()() const;
+        ExprPtrTest(Token, const std::ostream& = std::cout);
+        bool operator()(int&);
     };
 }
 #endif

@@ -1,8 +1,7 @@
-#include <typeinfo>
-#include <map>
-#include <time.h>
-#include <string>
+#include <random>
+
 #include "tests.hpp"
+#include "error.hpp"
 
 static std::string ttos(const Token& t)
 {
@@ -36,17 +35,50 @@ static std::string ttos(const Token& t)
 
 namespace tst
 {
-    ExprPtrTest::ExprPtrTest(Token token)
+    using uint32_t = uint_least32_t;
+    using engine = std::mt19937;
+
+    std::random_device os_seed;
+    const uint32_t seed = os_seed();
+    engine gen(seed);
+    std::uniform_int_distribution<uint32_t> dist(0, 22);
+
+    // random token generator
+    Token rtg()
     {
-        switch (token)
+        auto n = dist(gen) - 5;
+        switch(n)
         {
-            case ID:
-            case NUM:
-                ref = ExprPtr(token, "id_or_num");
-                break;
-            default:
-                ref = ExprPtr(token);
+            case 0 : return EXIT;
+            case 1 : return ENTRY;
+            case 2 : return NUM;
+            case 3 : return ID;
+            case 4 : return EMPTY;
+            case 5 : return LPAREN;
+            case 6 : return RPAREN;
+            case 7 : return NOT;
+            case 8 : return AND;
+            case 9 : return OR;
+            case 10: return XOR;
+            case 11: return EQ;
+            case 12: return GT;
+            case 13: return LT;
+            case 14: return MOD;
+            case 15: return DIV;
+            case 16: return MUL;
+            case 17: return PLUS;
+            case 18: return MINUS;
+            case 19: return ASN;
+            case 20: return LBRACE;
+            case 21: return RBRACE;
+            case 22: return ENDL;
         }
+    }
+
+    ExprPtrTest::ExprPtrTest(Token token, const std::ostream& s)
+        : out(s.rdbuf())
+    {
+        asn(ref, token);
     }
 
     template<exp_behavior eb, class E>
@@ -123,16 +155,16 @@ namespace tst
         std::string indent_s(indent + 1, '\t');
         out << std::string(indent, '\t') << "ExprPtr Tests:" << std::endl << indent_s;
 
-        pass &= test_add<EQUATE>           (ASN  , ID  , NUM   ); out<<std::endl<<indent_s;
-        pass &= test_add<EQUATE>           (PLUS , NUM , NUM   ); out<<std::endl<<indent_s;
-        pass &= test_add<EQUATE>           (MOD  , PLUS, ID    ); out<<std::endl<<indent_s;
-        pass &= test_add<EQUATE>           (DIV  , EQ  , MUL   ); out<<std::endl<<indent_s;
-        pass &= test_add<EQUATE>           (LT   , ID  , GT    ); out<<std::endl<<indent_s;
-        pass &= test_add<THROW, ExprError> (EMPTY, NUM , ID    ); out<<std::endl<<indent_s;
-        pass &= test_add<THROW, ExprError> (ID   , NUM , PLUS  ); out<<std::endl<<indent_s;
-        pass &= test_add<THROW, ExprError> (EXIT , DIV , _XOR  ); out<<std::endl<<indent_s;
-        pass &= test_add<THROW, ExprError> (NUM  , NUM , NUM   ); out<<std::endl<<indent_s;
-        pass &= test_add<THROW, ExprError> (ENDL , _AND, LBRACE); out<<std::endl<<indent_s;
+        pass &= test_add<EQUATE>                (ASN  , ID  , NUM   ); out<<std::endl<<indent_s;
+        pass &= test_add<EQUATE>                (PLUS , NUM , NUM   ); out<<std::endl<<indent_s;
+        pass &= test_add<EQUATE>                (MOD  , PLUS, ID    ); out<<std::endl<<indent_s;
+        pass &= test_add<EQUATE>                (DIV  , EQ  , MUL   ); out<<std::endl<<indent_s;
+        pass &= test_add<EQUATE>                (LT   , ID  , GT    ); out<<std::endl<<indent_s;
+        pass &= test_add<THROW, err::ExprError> (EMPTY, NUM , ID    ); out<<std::endl<<indent_s;
+        pass &= test_add<THROW, err::ExprError> (ID   , NUM , PLUS  ); out<<std::endl<<indent_s;
+        pass &= test_add<THROW, err::ExprError> (EXIT , DIV , XOR   ); out<<std::endl<<indent_s;
+        pass &= test_add<THROW, err::ExprError> (NUM  , NUM , NUM   ); out<<std::endl<<indent_s;
+        pass &= test_add<THROW, err::ExprError> (ENDL , AND , LBRACE); out<<std::endl<<indent_s;
 
         pass &= test_unary<EQUATE>(MINUS, NUM); out<<std::endl<<indent_s;
 
