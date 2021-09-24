@@ -13,11 +13,11 @@ class Lexer
     std::string buffer;
 
     bool is_identifier(char c) const { return isalnum(c) || c == '_'; }
-    bool is_number_char(char c) const { return isdigit(c) || c == '.'; }
     bool is_symbol(char) const;
 
     std::string make_number();
-    std::string make_identifier();
+    std::string make_id();
+    std::string make_string();
 
     public:
     Lexer(std::stringstream&);

@@ -80,7 +80,18 @@ void ExprPtr::add(const ExprPtr& arg)
 {
     if (is_null()) throw err::ExprError("called ExprPtr::add with a nullptr expr");
     if (this == &arg) throw err::ExprError("attempt to add expr to itself");
-    expr->add(arg);
+    if (terminates()) throw err::UnaddableExprError("attempt to add to terminating expr");
+    switch (token())
+    {
+        case EXIT:
+        case ID:
+        case NUM:
+        case ENDL:
+        case EMPTY:
+            throw err::UnaddableExprError("called add on incompatable ExprPtr");
+        default:
+            expr->add(arg);
+    }
 }
 
 
@@ -216,8 +227,10 @@ _Expr_::_Expr_(const Token& tok, char c)
 
 void _Expr_::add(ExprPtr expr)
 {
-    if (terminates()) throw err::ExprError("expression terminates, but was told to add an expr");
+    if (terminates()) throw err::UnaddableExprError("expression terminates, but was told to add an expr");
     if (left.is_null()) left = std::move(expr);
+    else if (left.token() == ENDL || left.token() == ENTRY || left.token() == EMPTY)
+        throw err::ExprError("impossible left token");
     else if (!left.terminates()) left.add(expr);
     else if (right.is_null()) right = std::move(expr);
     else if (!right.terminates() && right.token() != EMPTY) right.add(expr);

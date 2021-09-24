@@ -27,7 +27,7 @@ class Parser
     ExprPtr terminal();
 
     public:
-    Parser(std::stringstream& input) : lxr(input), scp() { }
+    Parser(std::stringstream& input) : lxr(input) { }
     ExprPtr operator()();
 };
 

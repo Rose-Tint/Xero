@@ -7,6 +7,9 @@
 #include "token.hpp"
 
 
+namespace tst { class ExprPtrTest; };
+
+
 class _Expr_;
 
 
@@ -14,6 +17,7 @@ class _Expr_;
 class ExprPtr
 {
     friend std::ostream& operator<<(std::ostream&, ExprPtr);
+    friend class tst::ExprPtrTest;
 
     void destroy() noexcept;
 
@@ -55,6 +59,7 @@ class ExprPtr
 class _Expr_
 {
     friend class ExprPtr;
+    friend class tst::ExprPtrTest;
     static bool entrance_made;
 
     Token token;
@@ -74,6 +79,9 @@ class _Expr_
     void add(ExprPtr);
     bool terminates() const;
 };
+
+
+bool operator==(const ExprPtr&, const ExprPtr&);
 
 
 // const ExprPtr& nullexpr = ExprPtr();

@@ -1,44 +1,73 @@
 #ifndef TESTS_HPP
-#include <iostream>
+#define TESTS_HPP
+
+#include <vector>
+#include <fstream>
 
 #include "expression.hpp"
+#include "lexer.hpp"
+#include "parser.hpp"
 #include "error.hpp"
+
 
 namespace tst
 {
-    int rng(int = 0, int = 100);
-
-    class TestError { };
-
-    template<class T>
-    static bool check(const T& given, const T& exp) { return given == exp; }
-
-    template<class E, class R, class ...A>
-    static bool throws_e(R (*f)(A...), A ...args)
-    {
-        try { f(args...); }
-        catch (E) { return true; }
-        return false;
-    }
-
+    class TestBase;
+    class ExprPtrTest;
+    class LexerTest;
     enum exp_behavior { THROW, EQUATE };
 
-    class ExprPtrTest final
-    {
-        ExprPtr ref;
+    typedef bool (TestBase::*TestFunction)(void);
 
+    class TestBase
+    {
+        static std::vector<std::streambuf*> bstack;
+
+        protected:
+        static std::vector<TestBase*> tests;
+        TestBase() { tests.push_back(this); }
+
+        virtual bool run() = 0;
+
+        template<typename ...Args>
+        static void print(std::string, Args...);
+        template<typename>
+        static void print(std::string);
+
+        static void newl() { print_stack("\n"); }
+
+        public:
+        static bool run_tests();
+        static void print_stack(const std::string&);
+        static void reg(std::streambuf*);
+        static unsigned char idt;
+    };
+
+    class ExprPtrTest final : private virtual TestBase
+    {
+        static ExprPtr ref;
         template<exp_behavior, class = err::ExprError>
         bool test_add(Token, Token, Token);
 
         template<exp_behavior, class = err::ExprError>
         bool test_unary(Token, Token);
 
-        // makes an ExprPtr out of potentially just a token
-        static void asn(ExprPtr&, Token, std::string = "default_arg");
+        // if the token would cause an ExprPtr to use a value arg, uses the given arg
+        static ExprPtr asn(Token, std::string = "default_arg");
+        bool run() override final;
 
         public:
-        ExprPtrTest(Token);
-        bool operator()(int&);
+        using TestBase::TestBase;
+    };
+
+    class LexerTest final : private virtual TestBase
+    {
+        bool test_next(std::string, std::vector<Token>);
+        bool run() override final;
+
+        public:
+        using TestBase::TestBase;
     };
 }
+
 #endif

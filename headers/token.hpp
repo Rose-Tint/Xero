@@ -1,12 +1,17 @@
 #ifndef TOKEN_HPP
 #define TOKEN_HPP
-enum Token : char
+
+#include <string>
+
+
+enum Token
 {
     EXIT     =  0 ,
     ENTRY    = -1 ,
     NUM      = -2 ,
     ID       = -4 ,
-    EMPTY    = -5,
+    EMPTY    = -5 ,
+    STR      = -6 ,
     LPAREN   = '(',
     RPAREN   = ')',
     NOT      = '!',
@@ -24,20 +29,13 @@ enum Token : char
     ASN      = ':',
     LBRACE   = '{',
     RBRACE   = '}',
+    LBRACKET = '[',
+    RBRACKET = ']',
     ENDL     = ';',
 };
-inline bool is_terminal(const Token& token)
-{
-    switch (token)
-    {
-        case ID:
-        case NUM:
-        case EXIT:
-        case EMPTY:
-        case ENDL:
-            return true;
-        default:
-            return false;
-    }
-}
+
+bool is_terminal(Token);
+
+const char* ttos(Token);
+
 #endif
